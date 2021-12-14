@@ -1,3 +1,4 @@
+import pandas as pd
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -6,6 +7,9 @@ from slowapi.errors import RateLimitExceeded
 
 from rate_limiter import limiter
 from routers import option
+
+
+pd.set_option('display.max_columns', None)
 
 # rate limiter
 app = FastAPI()
