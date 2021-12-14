@@ -10,8 +10,3 @@ def test_main():
     assert response.status_code == 200
     assert response.json() == {"msg": "Hello Norn"}
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "Hello Norn"}
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "Hello Norn"}
