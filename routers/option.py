@@ -22,5 +22,5 @@ async def options_chain_quotes(request: Request, response: Response, symbols: st
     if not symbols:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
-    option.get_option_chain('T')
+    option.get_option_chain('T', min_next_days, max_next_days)
     return {"symbols": symbols}
