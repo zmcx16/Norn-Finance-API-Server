@@ -25,6 +25,7 @@ def get_option_chain(symbol: str, min_next_days, max_next_days):
             expiry_datetime = date.fromisoformat(expiry_date)
             if expiry_max_datetime >= expiry_datetime >= expiry_min_datetime:
                 option_chain = ticker.option_chain(expiry_date)
+                print(option_chain)
                 opt_list = opt_list.append(option_chain)
 
     except Exception as ex:

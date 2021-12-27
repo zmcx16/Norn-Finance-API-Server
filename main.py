@@ -7,7 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from rate_limiter import limiter
-from routers import option
+from routers import option, stock
 
 # init
 logging.basicConfig(level=logging.DEBUG)
@@ -20,6 +20,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # routers
 app.include_router(option.router)
+app.include_router(stock.router)
 
 # gzip
 app.add_middleware(GZipMiddleware, minimum_size=1000)
