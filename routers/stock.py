@@ -34,5 +34,5 @@ async def stock_history(request: Request, response: Response, symbol: str, perio
 
     output = stock.get_stock_history(symbol, period)
     output['Date'] = output.index
-    output['Date'] = output['Date'].apply(lambda x: x.strftime('%m/%d/%Y'))
+    output['Date'] = output['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
     return {"symbol": symbol, "data": output.to_dict(orient='records')}

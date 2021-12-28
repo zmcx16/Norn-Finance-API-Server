@@ -6,6 +6,6 @@ client = TestClient(app)
 
 
 def test_options_chain_quotes():
-    response = client.get("/option/quote?symbols=T,AAPL")
+    response = client.get("/option/quote?symbol=INTC")
     assert response.status_code == 200
     print(response.json())
