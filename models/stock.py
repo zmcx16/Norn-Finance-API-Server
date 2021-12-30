@@ -1,3 +1,4 @@
+import traceback
 import yfinance as yf
 import logging
 
@@ -7,7 +8,7 @@ def get_stock_history(symbol: str, period: str, proxy=None):
         ticker = yf.Ticker(symbol)
         return ticker.history(period=period, proxy=proxy)
 
-    except Exception as ex:
-        logging.error('Generated an exception: {ex}'.format(ex=ex))
+    except Exception:
+        logging.error(traceback.format_exc())
 
     return None

@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+import traceback
 import yfinance as yf
 import logging
 from datetime import date, datetime, timedelta
@@ -44,8 +45,8 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                 expiry_calls_puts["puts"] = calls_puts[1]
                 contracts.append(expiry_calls_puts)
 
-    except Exception as ex:
-        logging.error('Generated an exception: {ex}'.format(ex=ex))
+    except Exception:
+        logging.error(traceback.format_exc())
         return None, None
 
     # print(contracts)
