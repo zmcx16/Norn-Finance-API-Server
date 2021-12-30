@@ -36,7 +36,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                 for calls_puts_index in range(len(option_chain)):
                     d = option_chain[calls_puts_index]
                     d.drop(d[d.volume < min_volume].index, inplace=True)
-                    d.drop(d[d.lastTradeDate < (now - timedelta(days=last_trade_days)).date()].index, inplace=True)
+                    d.drop(d[pd.to_datetime(d.lastTradeDate).dt.date < (now - timedelta(days=last_trade_days)).date()].index, inplace=True)
                     d.dropna(subset=["volume", "lastTradeDate"], inplace=True)
                     d["lastTradeDate"] = d["lastTradeDate"].apply(lambda x: x.strftime('%Y-%m-%d'))
                     calls_puts[calls_puts_index] = d.to_dict(orient='records')
