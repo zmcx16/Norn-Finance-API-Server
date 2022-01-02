@@ -51,3 +51,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
 
     # print(contracts)
     return contracts
+
+
+def calc_option_valuation(contracts, stock_price, volatility):
+    pass
