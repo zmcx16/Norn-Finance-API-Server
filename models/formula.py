@@ -40,67 +40,59 @@ class Option:
     # kind          Put: -1, Call: 1
     # s0            Underlying price
     # k             Strike price of the option
-    # t             Time to maturity (days)
+    # t             Time until option exercise (years to maturity)
     # r             Continuously compounding risk-free interest rate
     # sigma         Volatility
     # dv            Dividends of underlying during the option’s life
-    def __init__(self, european, kind, s0, k, t, r, sigma, dv):
-        self.european = european
-        self.kind = kind
-        self.s0 = s0
-        self.k = k
-        self.t = t / 252
-        self.sigma = sigma
-        self.r = r
-        self.dv = dv
 
     # B-S-M (Black-Scholes-Merton)
-    def bs(self):
-        if self.european or self.kind == 1:
-            d_1 = (np.log(self.s0 / self.k) + (
-                    self.r - self.dv + .5 * self.sigma ** 2) * self.t) / self.sigma / np.sqrt(
-                self.t)
-            d_2 = d_1 - self.sigma * np.sqrt(self.t)
-            return self.kind * self.s0 * np.exp(-self.dv * self.t) * sps.norm.cdf(
-                self.kind * d_1) - self.kind * self.k * np.exp(-self.r * self.t) * sps.norm.cdf(self.kind * d_2)
+    @staticmethod
+    def bs(european, kind, s0, k, t, r, sigma, dv):
+        if european or kind == 1:
+            d_1 = (np.log(s0 / k) + (r - dv + .5 * sigma ** 2) * t) / sigma / np.sqrt(t)
+            d_2 = d_1 - sigma * np.sqrt(t)
+            return kind * s0 * np.exp(-dv * t) * sps.norm.cdf(
+                kind * d_1) - kind * k * np.exp(-r * t) * sps.norm.cdf(kind * d_2)
         else:
             return -1
 
     #  Monte Carlo
-    def mc(self, iteration):
-        if self.european or self.kind == 1:
+    @staticmethod
+    def mc(european, kind, s0, k, t, r, sigma, dv, iteration=1000000):
+        if european or kind == 1:
             zt = np.random.normal(0, 1, iteration)
-            st = self.s0 * np.exp((self.r - self.dv - .5 * self.sigma ** 2) * self.t + self.sigma * self.t ** .5 * zt)
-            st = np.maximum(self.kind * (st - self.k), 0)
-            return np.average(st) * np.exp(-self.r * self.t)
+            st = s0 * np.exp((r - dv - .5 * sigma ** 2) * t + sigma * t ** .5 * zt)
+            st = np.maximum(kind * (st - k), 0)
+            return np.average(st) * np.exp(-r * t)
         else:
             return -1
 
     #  Binomial Tree
-    def bt(self, iteration):
-        delta = self.t / iteration
-        u = np.exp(self.sigma * np.sqrt(delta))
+    @staticmethod
+    def bt(european, kind, s0, k, t, r, sigma, dv, iteration=1000):
+        delta = t / iteration
+        u = np.exp(sigma * np.sqrt(delta))
         d = 1 / u
-        p = (np.exp((self.r - self.dv) * delta) - d) / (u - d)
+        p = (np.exp((r - dv) * delta) - d) / (u - d)
 
-        tree = np.arange(0, iteration * 2 + 2, 2, dtype=np.float128)
+        tree = np.arange(0, iteration * 2 + 2, 2, dtype=np.longdouble)
         tree[iteration // 2 + 1:] = tree[:(iteration + 1) // 2][::-1]
         np.multiply(tree, -1, out=tree)
         np.add(tree, iteration, out=tree)
         np.power(u, tree[:iteration // 2], out=tree[:iteration // 2])
         np.power(d, tree[iteration // 2:], out=tree[iteration // 2:])
-        np.maximum((self.s0 * tree - self.k) * self.kind, 0, out=tree)
+        np.maximum((s0 * tree - k) * kind, 0, out=tree)
 
         for j in range(iteration):
             newtree = tree[:-1] * p + tree[1:] * (1 - p)
-            newtree = newtree * np.exp(-self.r * delta)
-            if not self.european:
-                compare = np.abs(iteration - j - 1 - np.arange(tree.size - 1) * 2).astype(np.float128)
+            newtree = newtree * np.exp(-r * delta)
+            if not european:
+                compare = np.abs(iteration - j - 1 - np.arange(tree.size - 1) * 2).astype(np.longdouble)
                 np.power(u, compare[:len(compare) // 2], out=compare[:len(compare) // 2])
                 np.power(d, compare[len(compare) // 2:], out=compare[len(compare) // 2:])
-                np.multiply(self.s0, compare, out=compare)
-                np.subtract(compare, self.k, out=compare)
-                np.multiply(compare, self.kind, out=compare)
+                np.multiply(s0, compare, out=compare)
+                np.subtract(compare, k, out=compare)
+                np.multiply(compare, kind, out=compare)
                 np.maximum(newtree, compare, out=newtree)
             tree = newtree
         return tree[0]
