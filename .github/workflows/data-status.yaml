@@ -1,4 +1,4 @@
-name: Data
+name: data-status
 
 on:
   workflow_dispatch:
