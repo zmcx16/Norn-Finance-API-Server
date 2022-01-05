@@ -84,7 +84,7 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
     stock_price, ewma_his_vol, contracts = \
         option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
                                               ewma_his_vol_period, ewma_his_vol_lambda, proxy)
-    if len(contracts) == 0:
+    if contracts is None or len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
     return {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
