@@ -144,6 +144,7 @@ if __name__ == "__main__":
     for symbol in stock_info:
         data = {"symbol": symbol}
         task_queue.put(data)
+        break
 
     work_list = []
     for index in range(THREAD_CNT):
