@@ -34,14 +34,14 @@ class OptionsChainQuotesData(BaseModel):
 
 class OptionsChainQuotesResponse(BaseModel):
     symbol: str
-    stockPrice: float
+    stockPrice: Optional[float]
     contracts: List[OptionsChainQuotesData]
 
 
 class OptionsChainQuotesValuationResponse(BaseModel):
     symbol: str
-    stockPrice: float
-    EWMA_historicalVolatility: float
+    stockPrice: Optional[float]
+    EWMA_historicalVolatility: Optional[float]
     contracts: List[OptionsChainQuotesData]
 
 
@@ -52,7 +52,7 @@ router = APIRouter(
 
 
 @router.get("/quote", tags=["quote"], response_model=OptionsChainQuotesResponse)
-@limiter.app_limiter.limit("3/minute")
+@limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes(request: Request, response: Response, symbol: str, min_next_days: Optional[int] = 0,
                                max_next_days: Optional[int] = 60,
                                min_volume: Optional[int] = 5,
@@ -62,12 +62,15 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     contracts = option.get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
+    if len(contracts) == 0:
+        return {"symbol": symbol, "contracts": []}
+
     stock_data = stock.get_stock_history(symbol, "1d")
     return {"symbol": symbol, "stockPrice": stock_data["Close"][len(stock_data["Close"])-1], "contracts": contracts}
 
 
 @router.get("/quote-valuation", tags=["quote"], response_model=OptionsChainQuotesValuationResponse)
-@limiter.app_limiter.limit("3/minute")
+@limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes_valuation(request: Request, response: Response, symbol: str,
                                          min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 60,
                                          min_volume: Optional[int] = 5,
@@ -79,6 +82,9 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     contracts = option.get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
+    if len(contracts) == 0:
+        return {"symbol": symbol, "contracts": []}
+
     stock_data = stock.get_stock_history(symbol, "1y")
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
                                                                  p_lambda=ewma_his_vol_lambda)

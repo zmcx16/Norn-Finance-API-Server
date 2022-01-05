@@ -1,3 +1,5 @@
+import logging
+import traceback
 import scipy.stats as sps
 import numpy as np
 
@@ -48,51 +50,70 @@ class Option:
     # B-S-M (Black-Scholes-Merton)
     @staticmethod
     def bs(european, kind, s0, k, t, r, sigma, dv):
-        if european or kind == 1:
-            d_1 = (np.log(s0 / k) + (r - dv + .5 * sigma ** 2) * t) / sigma / np.sqrt(t)
-            d_2 = d_1 - sigma * np.sqrt(t)
-            return kind * s0 * np.exp(-dv * t) * sps.norm.cdf(
-                kind * d_1) - kind * k * np.exp(-r * t) * sps.norm.cdf(kind * d_2)
-        else:
+        try:
+            if european or kind == 1:
+                d_1 = (np.log(s0 / k) + (r - dv + .5 * sigma ** 2) * t) / sigma / np.sqrt(t)
+                d_2 = d_1 - sigma * np.sqrt(t)
+                return kind * s0 * np.exp(-dv * t) * sps.norm.cdf(
+                    kind * d_1) - kind * k * np.exp(-r * t) * sps.norm.cdf(kind * d_2)
+            else:
+                return -1
+
+        except Exception:
+            logging.error(traceback.format_exc())
             return -1
 
     #  Monte Carlo
     @staticmethod
     def mc(european, kind, s0, k, t, r, sigma, dv, iteration=1000000):
-        if european or kind == 1:
-            zt = np.random.normal(0, 1, iteration)
-            st = s0 * np.exp((r - dv - .5 * sigma ** 2) * t + sigma * t ** .5 * zt)
-            st = np.maximum(kind * (st - k), 0)
-            return np.average(st) * np.exp(-r * t)
-        else:
+        try:
+            if european or kind == 1:
+                zt = np.random.normal(0, 1, iteration)
+                st = s0 * np.exp((r - dv - .5 * sigma ** 2) * t + sigma * t ** .5 * zt)
+                st = np.maximum(kind * (st - k), 0)
+                return np.average(st) * np.exp(-r * t)
+            else:
+                return -1
+
+        except Exception:
+            logging.error(traceback.format_exc())
             return -1
 
     #  Binomial Tree
     @staticmethod
     def bt(european, kind, s0, k, t, r, sigma, dv, iteration=1000):
-        delta = t / iteration
-        u = np.exp(sigma * np.sqrt(delta))
-        d = 1 / u
-        p = (np.exp((r - dv) * delta) - d) / (u - d)
+        try:
+            delta = t / iteration
+            u = np.exp(sigma * np.sqrt(delta))
+            d = 1 / u
+            p = (np.exp((r - dv) * delta) - d) / (u - d)
 
-        tree = np.arange(0, iteration * 2 + 2, 2, dtype=np.longdouble)
-        tree[iteration // 2 + 1:] = tree[:(iteration + 1) // 2][::-1]
-        np.multiply(tree, -1, out=tree)
-        np.add(tree, iteration, out=tree)
-        np.power(u, tree[:iteration // 2], out=tree[:iteration // 2])
-        np.power(d, tree[iteration // 2:], out=tree[iteration // 2:])
-        np.maximum((s0 * tree - k) * kind, 0, out=tree)
+            tree = np.arange(0, iteration * 2 + 2, 2, dtype=np.longdouble)
+            tree[iteration // 2 + 1:] = tree[:(iteration + 1) // 2][::-1]
+            np.multiply(tree, -1, out=tree)
+            np.add(tree, iteration, out=tree)
+            np.power(u, tree[:iteration // 2], out=tree[:iteration // 2])
+            np.power(d, tree[iteration // 2:], out=tree[iteration // 2:])
+            np.maximum((s0 * tree - k) * kind, 0, out=tree)
 
-        for j in range(iteration):
-            newtree = tree[:-1] * p + tree[1:] * (1 - p)
-            newtree = newtree * np.exp(-r * delta)
-            if not european:
-                compare = np.abs(iteration - j - 1 - np.arange(tree.size - 1) * 2).astype(np.longdouble)
-                np.power(u, compare[:len(compare) // 2], out=compare[:len(compare) // 2])
-                np.power(d, compare[len(compare) // 2:], out=compare[len(compare) // 2:])
-                np.multiply(s0, compare, out=compare)
-                np.subtract(compare, k, out=compare)
-                np.multiply(compare, kind, out=compare)
-                np.maximum(newtree, compare, out=newtree)
-            tree = newtree
-        return tree[0]
+            for j in range(iteration):
+                newtree = tree[:-1] * p + tree[1:] * (1 - p)
+                newtree = newtree * np.exp(-r * delta)
+                if not european:
+                    compare = np.abs(iteration - j - 1 - np.arange(tree.size - 1) * 2).astype(np.longdouble)
+                    np.power(u, compare[:len(compare) // 2], out=compare[:len(compare) // 2])
+                    np.power(d, compare[len(compare) // 2:], out=compare[len(compare) // 2:])
+                    np.multiply(s0, compare, out=compare)
+                    np.subtract(compare, k, out=compare)
+                    np.multiply(compare, kind, out=compare)
+                    np.maximum(newtree, compare, out=newtree)
+                tree = newtree
+
+            if np.isnan(tree[0]):
+                return -1
+            else:
+                return tree[0]
+
+        except Exception:
+            logging.error(traceback.format_exc())
+            return -1

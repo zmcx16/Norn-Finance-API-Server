@@ -27,7 +27,7 @@ router = APIRouter(
 
 
 @router.get("/history", tags=["stock"], response_model=StockHistoryResponse)
-@limiter.app_limiter.limit("3/minute")
+@limiter.app_limiter.limit("100/minute")
 async def stock_history(request: Request, response: Response, symbol: str, period: Optional[str] = "1y"):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")

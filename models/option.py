@@ -42,13 +42,14 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                     d["lastTradeDate"] = d["lastTradeDate"].apply(lambda x: x.strftime('%Y-%m-%d'))
                     calls_puts[calls_puts_index] = d.to_dict(orient='records')
 
-                expiry_calls_puts["calls"] = calls_puts[0]
-                expiry_calls_puts["puts"] = calls_puts[1]
-                contracts.append(expiry_calls_puts)
+                if len(calls_puts[0]) > 0 or len(calls_puts[1]) > 0:
+                    expiry_calls_puts["calls"] = calls_puts[0]
+                    expiry_calls_puts["puts"] = calls_puts[1]
+                    contracts.append(expiry_calls_puts)
 
     except Exception:
         logging.error(traceback.format_exc())
-        return None, None
+        return None
 
     # print(contracts)
     return contracts
@@ -82,4 +83,4 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
             put["valuationData"]["BT_EWMAHisVol"] = Option.bt(False, -1, stock_price, put['strike'],
                                                               time_2_maturity_year, risk_free_interest_rate,
                                                               volatility, dividends)
-    print(contracts)
+    #  print(contracts)
