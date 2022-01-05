@@ -33,7 +33,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install -r ./master/requirements.txt
-    - name: Run forecast
+    - name: Run update option data
       env:
         AF_URL: ${{ secrets.AF_URL }}
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
