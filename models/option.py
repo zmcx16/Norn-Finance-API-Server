@@ -5,7 +5,8 @@ import yfinance as yf
 import logging
 from datetime import date, datetime, timedelta
 
-from models.formula import Option
+from models import formula, stock
+
 
 def get_option_date(symbol: str):
     ticker = yf.Ticker(symbol)
@@ -63,24 +64,38 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
         time_2_maturity_year = np.busday_count(now, expiry_datetime) / 252.0
         for call in contract["calls"]:
             call["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
-            call["valuationData"]["BSM_EWMAHisVol"] = Option.bs(False, 1, stock_price, call['strike'],
+            call["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, 1, stock_price, call['strike'],
                                                                 time_2_maturity_year, risk_free_interest_rate,
                                                                 volatility, dividends)
-            call["valuationData"]["MC_EWMAHisVol"] = Option.mc(False, 1, stock_price, call['strike'],
+            call["valuationData"]["MC_EWMAHisVol"] = formula.Option.mc(False, 1, stock_price, call['strike'],
                                                                time_2_maturity_year, risk_free_interest_rate,
                                                                volatility, dividends)
-            call["valuationData"]["BT_EWMAHisVol"] = Option.bt(False, 1, stock_price, call['strike'],
+            call["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, 1, stock_price, call['strike'],
                                                                time_2_maturity_year, risk_free_interest_rate,
                                                                volatility, dividends)
         for put in contract["puts"]:
             put["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
-            put["valuationData"]["BSM_EWMAHisVol"] = Option.bs(False, -1, stock_price, put['strike'],
+            put["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, -1, stock_price, put['strike'],
                                                                time_2_maturity_year, risk_free_interest_rate,
                                                                volatility, dividends)
-            put["valuationData"]["MC_EWMAHisVol"] = Option.mc(False, -1, stock_price, put['strike'],
+            put["valuationData"]["MC_EWMAHisVol"] = formula.Option.mc(False, -1, stock_price, put['strike'],
                                                               time_2_maturity_year, risk_free_interest_rate,
                                                               volatility, dividends)
-            put["valuationData"]["BT_EWMAHisVol"] = Option.bt(False, -1, stock_price, put['strike'],
+            put["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, -1, stock_price, put['strike'],
                                                               time_2_maturity_year, risk_free_interest_rate,
                                                               volatility, dividends)
     #  print(contracts)
+
+
+def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy,
+                                   ewma_his_vol_period, ewma_his_vol_lambda):
+    contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
+    if len(contracts) == 0:
+        return None, None, None
+
+    stock_data = stock.get_stock_history(symbol, "1y")
+    ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
+                                                                 p_lambda=ewma_his_vol_lambda)
+    stock_price = stock_data["Close"][len(stock_data["Close"])-1]
+    calc_option_valuation(contracts, stock_price, ewma_his_vol)
+    return stock_price, ewma_his_vol, contracts

@@ -81,13 +81,8 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
-    contracts = option.get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
-    if len(contracts) == 0:
-        return {"symbol": symbol, "contracts": []}
-
-    stock_data = stock.get_stock_history(symbol, "1y")
-    ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
-                                                                 p_lambda=ewma_his_vol_lambda)
-    stock_price = stock_data["Close"][len(stock_data["Close"])-1]
-    option.calc_option_valuation(contracts, stock_price, ewma_his_vol)
-    return {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol, "contracts": contracts}
+    stock_price, ewma_his_vol, contracts = option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days,
+                                                                          min_volume, last_trade_days, proxy,
+                                                                          ewma_his_vol_period, ewma_his_vol_lambda)
+    return {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
+            "contracts": contracts}
