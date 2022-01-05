@@ -87,8 +87,8 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
     #  print(contracts)
 
 
-def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy,
-                                   ewma_his_vol_period, ewma_his_vol_lambda):
+def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
+                                   ewma_his_vol_period, ewma_his_vol_lambda, proxy):
     contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
     if len(contracts) == 0:
         return None, None, None

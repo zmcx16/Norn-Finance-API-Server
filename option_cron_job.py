@@ -10,7 +10,6 @@ import threading
 import queue
 from fastapi.testclient import TestClient
 from urllib.parse import urlencode
-from datetime import datetime
 
 from main import app
 
@@ -19,8 +18,8 @@ afscreener_url = os.environ.get(
     "AF_URL", "")
 afscreener_token = os.environ.get("AF_TOKEN", "")
 
-DELAY_TIME_SEC = 1
-THREAD_CNT = 1
+DELAY_TIME_SEC = 5
+THREAD_CNT = 2
 
 nf_client = TestClient(app)
 api_thread_lock = threading.Lock()
