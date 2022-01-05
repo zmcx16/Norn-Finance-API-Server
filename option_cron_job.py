@@ -72,7 +72,7 @@ class FinanceAPIThread(threading.Thread):
         self.output = []
 
     def run(self):
-        logging.info("Thread", self.id, "start")
+        logging.info("Thread " + str(self.id) + "start")
         while self.task_queue.qsize() > 0:
             try:
                 data = self.task_queue.get()
