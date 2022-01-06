@@ -54,7 +54,7 @@ router = APIRouter(
 @router.get("/quote", tags=["quote"], response_model=OptionsChainQuotesResponse)
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes(request: Request, response: Response, symbol: str, min_next_days: Optional[int] = 0,
-                               max_next_days: Optional[int] = 60,
+                               max_next_days: Optional[int] = 45,
                                min_volume: Optional[int] = 5,
                                last_trade_days: Optional[int] = 3,
                                proxy: Optional[str] = None):
@@ -72,7 +72,7 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
 @router.get("/quote-valuation", tags=["quote"], response_model=OptionsChainQuotesValuationResponse)
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes_valuation(request: Request, response: Response, symbol: str,
-                                         min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 60,
+                                         min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
                                          min_volume: Optional[int] = 5,
                                          last_trade_days: Optional[int] = 3,
                                          ewma_his_vol_period: Optional[int] = 21,
