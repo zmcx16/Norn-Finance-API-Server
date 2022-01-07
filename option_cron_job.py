@@ -127,7 +127,21 @@ class FinanceAPIThread(threading.Thread):
         return None
 
 
+def get_diff(a, b):
+    if a == b:
+        return 0
+    try:
+        return abs(a - b) / a
+    except ZeroDivisionError:
+        return float('inf')
+
+
+def check_over_diff(last_price, estimated_price, threshold):
+    return last_price >= 0 and estimated_price >= 0 and get_diff(last_price, estimated_price) > threshold
+
+
 if __name__ == "__main__":
+
     start_time = time.perf_counter()
     logging.basicConfig(level=logging.DEBUG)
     root = pathlib.Path(__file__).parent.resolve()
@@ -152,7 +166,7 @@ if __name__ == "__main__":
     for worker in work_list:
         worker.join()
 
-    # save statistics_output
+    # save output
     output_data = []
     for worker in work_list:
         for d in worker.output:
@@ -160,6 +174,37 @@ if __name__ == "__main__":
 
     with open(output_folder / 'output.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(output_data, separators=(',', ':')))
+
+    # save bias >= 100% output
+    bias_output = []
+    bias_threshold = 1.00
+
+    for d in output_data:
+        t = {"symbol": d["symbol"], "stockPrice": d["stockPrice"],
+             "EWMA_historicalVolatility": d["EWMA_historicalVolatility"], "contracts": []}
+        for contract in d["contracts"]:
+            c = {"expiryDate": "2022-01-21", "calls": [], "puts": []}
+            for call in contract["calls"]:
+                if check_over_diff(call["lastPrice"], call["valuationData"]["BSM_EWMAHisVol"], bias_threshold) or \
+                        check_over_diff(call["lastPrice"], call["valuationData"]["MC_EWMAHisVol"], bias_threshold) or \
+                        check_over_diff(call["lastPrice"], call["valuationData"]["BT_EWMAHisVol"], bias_threshold):
+                    c["calls"].append(call)
+            for put in contract["puts"]:
+                if check_over_diff(put["lastPrice"], put["valuationData"]["BSM_EWMAHisVol"], bias_threshold) or \
+                        check_over_diff(put["lastPrice"], put["valuationData"]["MC_EWMAHisVol"], bias_threshold) or \
+                        check_over_diff(put["lastPrice"], put["valuationData"]["BT_EWMAHisVol"], bias_threshold):
+                    c["puts"].append(put)
+
+            if len(c["calls"]) > 0 or len(c["puts"]) > 0:
+                t["contracts"].append(c)
+
+        if len(t["contracts"]) > 0:
+            bias_output.append(t)
+
+    # print(bias_output)
+    print(len(bias_output))
+    with open(output_folder / 'output_bias100.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(bias_output, separators=(',', ':')))
 
     logging.info('Time Taken: ' + time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - start_time)))
     logging.info('all task done')
