@@ -106,16 +106,16 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
                                          proxy: Optional[str] = None):
 
-    async def keep_alive():
+    async def keep_alive(_ws):
         while True:
-            _ = await websocket.receive_text()
+            _ = await _ws.receive_text()
 
     # start
     await websocket.accept()
     _ = await websocket.receive_text()  # first msg to connection ready
 
     # keep alive to prevent heroku request timeout H12
-    kt = threading.Thread(target=keep_alive)
+    kt = threading.Thread(target=keep_alive, args=(websocket,))
     kt.start()
 
     # run
