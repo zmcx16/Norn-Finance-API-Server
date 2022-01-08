@@ -108,7 +108,8 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
 
     async def keep_alive():
         while True:
-            _ = await websocket.receive_text()
+            d = await websocket.receive_text()
+            await websocket.send_text(d)
 
     # start
     await websocket.accept()
