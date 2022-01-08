@@ -105,30 +105,27 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                          ewma_his_vol_period: Optional[int] = 21,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
                                          proxy: Optional[str] = None):
-    class RunThread(threading.Thread):
-        output = None
 
-        def __init__(self):
-            threading.Thread.__init__(self)
+    async def keep_alive():
+        while True:
+            _ = await websocket.receive_text()
 
-        def run(self):
-            stock_price, ewma_his_vol, contracts = \
-                option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                                      ewma_his_vol_period, ewma_his_vol_lambda, proxy)
-            if contracts is None or len(contracts) == 0:
-                self.output = {"symbol": symbol, "contracts": []}
-            else:
-                self.output = {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
-                               "contracts": contracts}
-
+    # start
     await websocket.accept()
-    t = RunThread()
-    t.start()
-    while True:
-        if not t.is_alive():
-            # don't pass t.output directly, may occur "Object of type longdouble is not JSON serializable"
-            await websocket.send_json(OptionsChainQuotesValuationResponse(**t.output).dict())
-            break
-        time.sleep(0.5)
 
+    # keep alive
+    kt = threading.Thread(target=keep_alive)
+    kt.start()
+
+    # run
+    stock_price, ewma_his_vol, contracts = \
+        option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
+                                              ewma_his_vol_period, ewma_his_vol_lambda, proxy)
+    if contracts is None or len(contracts) == 0:
+        output = {"symbol": symbol, "contracts": []}
+    else:
+        output = {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
+                  "contracts": contracts}
+
+    await websocket.send_json(OptionsChainQuotesValuationResponse(**output).dict())
     await websocket.close()

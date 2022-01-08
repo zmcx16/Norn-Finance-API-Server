@@ -19,6 +19,7 @@ def test_options_chain_quotes_valuation():
 
 def test_ws_options_chain_quotes_valuation():
     with client.websocket_connect("/ws/option/quote-valuation?symbol=T") as websocket:
+        websocket.send_bytes(b"")
         output = websocket.receive_json()
         assert output is not None
         assert len(output["contracts"]) > 0
