@@ -1,1 +1,1 @@
-web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
+web: uvicorn main:app --host=0.0.0.0 --port=${PORT:-5000} --workers 2 --ws-ping-interval 300.0 --ws-ping-timeout 300.0
