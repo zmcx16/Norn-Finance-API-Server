@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 from fastapi import FastAPI, Request, Response
+from fastapi.websockets import WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -35,8 +36,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/ws", option.ws)
+
 
 @app.get("/")
 @limiter.app_limiter.limit("2/minute")
-def hello_norn(request: Request, response: Response):
+async def hello_norn(request: Request, response: Response):
     return {"msg": "Hello Norn"}
+
+
+@app.websocket_route("/ws")
+async def ws_hello_norn(websocket: WebSocket):
+    await websocket.accept()
+    await websocket.send_json({"msg": "Hello Norn"})
+    await websocket.close()
