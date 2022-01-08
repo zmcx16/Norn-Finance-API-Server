@@ -105,8 +105,6 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                          ewma_his_vol_period: Optional[int] = 21,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
                                          proxy: Optional[str] = None):
-
-    start_time = time.perf_counter()
     class RunThread(threading.Thread):
         output = None
 
@@ -133,5 +131,4 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             break
         time.sleep(0.5)
 
-    print('Time Taken: ' + time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - start_time)))
     await websocket.close()
