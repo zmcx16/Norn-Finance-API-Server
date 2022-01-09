@@ -99,12 +99,13 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
 
 @ws.websocket("/option/quote-valuation")
 async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
-                                         min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
-                                         min_volume: Optional[int] = 5,
-                                         last_trade_days: Optional[int] = 3,
-                                         ewma_his_vol_period: Optional[int] = 21,
-                                         ewma_his_vol_lambda: Optional[float] = 0.94,
-                                         proxy: Optional[str] = None):
+                                            min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
+                                            min_volume: Optional[int] = 5,
+                                            last_trade_days: Optional[int] = 3,
+                                            ewma_his_vol_period: Optional[int] = 21,
+                                            ewma_his_vol_lambda: Optional[float] = 0.94,
+                                            proxy: Optional[str] = None,
+                                            with_heartbeat: Optional[bool] = True):
 
     class RunThread(threading.Thread):
         output = None
@@ -130,7 +131,9 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             # don't pass t.output directly, may occur "Object of type longdouble is not JSON serializable"
             await websocket.send_json(OptionsChainQuotesValuationResponse(**t.output).dict())
             break
-
-        _ = await websocket.receive_text()
+        if with_heartbeat:
+            _ = await websocket.receive_text()
+        else:
+            time.sleep(1.0)
 
     await websocket.close()

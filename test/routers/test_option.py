@@ -1,3 +1,7 @@
+import time
+import threading
+import asyncio
+
 from fastapi.testclient import TestClient
 
 from main import app
@@ -18,8 +22,7 @@ def test_options_chain_quotes_valuation():
 
 
 def test_ws_options_chain_quotes_valuation():
-    with client.websocket_connect("/ws/option/quote-valuation?symbol=T") as websocket:
-        websocket.send_bytes(b"")
+    with client.websocket_connect("/ws/option/quote-valuation?symbol=T&with_heartbeat=false") as websocket:
         output = websocket.receive_json()
         assert output is not None
         assert len(output["contracts"]) > 0
