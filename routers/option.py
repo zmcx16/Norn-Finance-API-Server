@@ -1,4 +1,5 @@
 import time
+import asyncio
 import threading
 
 from typing import List, Optional
@@ -106,31 +107,25 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
                                          proxy: Optional[str] = None):
 
-    class RunThread(threading.Thread):
-        output = None
+    def run():
+        stock_price, ewma_his_vol, contracts = \
+            option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
+                                                  ewma_his_vol_period, ewma_his_vol_lambda, proxy)
+        if contracts is None or len(contracts) == 0:
+            return {"symbol": symbol, "contracts": []}
+        else:
+            return {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
+                           "contracts": contracts}
 
-        def __init__(self):
-            threading.Thread.__init__(self)
-
-        def run(self):
-            stock_price, ewma_his_vol, contracts = \
-                option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                                      ewma_his_vol_period, ewma_his_vol_lambda, proxy)
-            if contracts is None or len(contracts) == 0:
-                self.output = {"symbol": symbol, "contracts": []}
-            else:
-                self.output = {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
-                               "contracts": contracts}
+    async def keep_alive():
+        while True:
+            _ = await websocket.receive_text()
 
     await websocket.accept()
-    t = RunThread()
-    t.start()
-    while True:
-        if not t.is_alive():
-            # don't pass t.output directly, may occur "Object of type longdouble is not JSON serializable"
-            await websocket.send_json(OptionsChainQuotesValuationResponse(**t.output).dict())
-            break
+    _ = await websocket.receive_text()
 
-        _ = await websocket.receive_text()
+    t = threading.Thread(target=asyncio.run, args=(keep_alive(),))
+    t.start()
+    await websocket.send_json(OptionsChainQuotesValuationResponse(**run()).dict())
 
     await websocket.close()
