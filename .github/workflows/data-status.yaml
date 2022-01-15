@@ -58,6 +58,7 @@ jobs:
         repository: zmcx16/Norn-StockScreener
         token: ${{ secrets.ACTIONS_TOKEN }}
         path: ./Norn-StockScreener
+        fetch-depth: 0
     - name: Copy options & push Norn-StockScreener
       run: |-
         rm -rf ./Norn-StockScreener/norn-data/options
