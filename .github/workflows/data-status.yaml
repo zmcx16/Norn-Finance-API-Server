@@ -61,7 +61,7 @@ jobs:
     - name: Copy options & push Norn-StockScreener
       run: |-
         rm -rf ./Norn-StockScreener/norn-data/options
-        cp -r ./output/\* ./Norn-StockScreener/norn-data/options
+        cp -r ./output ./Norn-StockScreener/norn-data/options
         git config --global user.name "zmcx16-bot"
         git reset --soft HEAD~1
         git add ./Norn-StockScreener/norn-data/options/\* && git commit -m "updated options"
