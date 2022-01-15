@@ -33,12 +33,12 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install -r ./master/requirements.txt
-    - name: Run update option data
-      env:
-        AF_URL: ${{ secrets.AF_URL }}
-        AF_TOKEN: ${{ secrets.AF_TOKEN }}
-      run: |-
-        python ./master/option_cron_job.py
+    # - name: Run update option data
+    #   env:
+    #     AF_URL: ${{ secrets.AF_URL }}
+    #     AF_TOKEN: ${{ secrets.AF_TOKEN }}
+    #   run: |-
+    #     python ./master/option_cron_job.py
     - name: Copy output
       run: |-
         cp -r ./master/output ./
@@ -50,4 +50,19 @@ jobs:
         git config --global user.name "zmcx16-bot"
         git reset --soft HEAD~1
         git add ./output/\* && git commit -m "updated output"
+        git push -f
+    - name: Checkout Norn-StockScreener
+      uses: actions/checkout@v2
+      with: 
+        ref: gh-pages
+        repository: zmcx16/Norn-StockScreener
+        token: ${{ secrets.ACTIONS_TOKEN }}
+        path: ./Norn-StockScreener
+    - name: Copy options & push Norn-StockScreener
+      run: |-
+        rm -rf ./Norn-StockScreener/norn-data/options
+        cp -r ./output/\* ./Norn-StockScreener/norn-data/options
+        git config --global user.name "zmcx16-bot"
+        git reset --soft HEAD~1
+        git add ./Norn-StockScreener/norn-data/options/\* && git commit -m "updated options"
         git push -f
