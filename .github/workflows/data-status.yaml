@@ -54,17 +54,16 @@ jobs:
     - name: Checkout Norn-StockScreener
       uses: actions/checkout@v2
       with: 
+        ref: gh-pages
         repository: zmcx16/Norn-StockScreener
         token: ${{ secrets.ACTIONS_TOKEN }}
         path: ./Norn-StockScreener
     - name: Copy options & push Norn-StockScreener
       run: |-
-        git checkout gh-pages
         rm -rf ./Norn-StockScreener/norn-data/options
         cp -r ./output ./Norn-StockScreener/norn-data/
         cd ./Norn-StockScreener
         mv ./norn-data/output ./norn-data/options
         git config --global user.name "zmcx16-bot"
-        git reset --soft HEAD~1
         git add ./norn-data/options/\* && git commit -m "updated options"
         git push -f
