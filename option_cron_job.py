@@ -137,9 +137,9 @@ def get_diff(a, b):
 
 
 def check_over_diff(last_price, estimated_price, premium_threshold, discount_threshold, price_threshold):
-    return last_price >= 0 and estimated_price >= 0 and last_price >= price_threshold and \
-           ((premium_threshold != "NaN" and get_diff(last_price, estimated_price) > premium_threshold) or
-            (discount_threshold != "NaN" and get_diff(last_price, estimated_price) < discount_threshold))
+    return last_price > 0 and estimated_price > 0 and last_price >= price_threshold and \
+           ((premium_threshold != "NaN" and get_diff(last_price, estimated_price) >= premium_threshold) or
+            (discount_threshold != "NaN" and get_diff(last_price, estimated_price) <= discount_threshold))
 
 
 if __name__ == "__main__":
