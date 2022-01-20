@@ -2,4 +2,6 @@ coverage:
   status:
     patch:
       default:
-        target: 80%
+        enabled: false
+    project:
+    changes:
