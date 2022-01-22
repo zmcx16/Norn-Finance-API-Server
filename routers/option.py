@@ -61,7 +61,7 @@ ws = FastAPI()
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes(request: Request, response: Response, symbol: str, min_next_days: Optional[int] = 0,
                                max_next_days: Optional[int] = 45,
-                               min_volume: Optional[int] = 5,
+                               min_volume: Optional[int] = 10,
                                last_trade_days: Optional[int] = 3,
                                proxy: Optional[str] = None):
     if not symbol:
@@ -79,7 +79,7 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes_valuation(request: Request, response: Response, symbol: str,
                                          min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
-                                         min_volume: Optional[int] = 5,
+                                         min_volume: Optional[int] = 10,
                                          last_trade_days: Optional[int] = 3,
                                          ewma_his_vol_period: Optional[int] = 21,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
@@ -100,7 +100,7 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
 @ws.websocket("/option/quote-valuation")
 async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                             min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
-                                            min_volume: Optional[int] = 5,
+                                            min_volume: Optional[int] = 10,
                                             last_trade_days: Optional[int] = 3,
                                             ewma_his_vol_period: Optional[int] = 21,
                                             ewma_his_vol_lambda: Optional[float] = 0.94,
