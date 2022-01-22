@@ -18,7 +18,7 @@ afscreener_url = os.environ.get(
     "AF_URL", "")
 afscreener_token = os.environ.get("AF_TOKEN", "")
 
-DELAY_TIME_SEC = 0
+DELAY_TIME_SEC = 0.8
 THREAD_CNT = 1
 
 nf_client = TestClient(app)
