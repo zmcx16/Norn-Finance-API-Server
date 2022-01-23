@@ -205,7 +205,7 @@ if __name__ == "__main__":
             t = {"symbol": d["symbol"], "stockPrice": d["stockPrice"],
                  "EWMA_historicalVolatility": d["EWMA_historicalVolatility"], "contracts": []}
             for contract in d["contracts"]:
-                c = {"expiryDate": "2022-01-21", "calls": [], "puts": []}
+                c = {"expiryDate": contract["expiryDate"], "calls": [], "puts": []}
                 for call in contract["calls"]:
                     if check_over_diff(call["lastPrice"], call["valuationData"]["BSM_EWMAHisVol"], premium_threshold, discount_threshold, price_threshold) or \
                             check_over_diff(call["lastPrice"], call["valuationData"]["MC_EWMAHisVol"], premium_threshold, discount_threshold, price_threshold) or \
