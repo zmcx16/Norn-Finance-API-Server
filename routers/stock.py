@@ -28,11 +28,12 @@ router = APIRouter(
 
 @router.get("/history", tags=["stock"], response_model=StockHistoryResponse)
 @limiter.app_limiter.limit("100/minute")
-async def stock_history(request: Request, response: Response, symbol: str, period: Optional[str] = "1y"):
+async def stock_history(request: Request, response: Response, symbol: str, period: Optional[str] = "1y",
+                        proxy: Optional[str] = None, stock_src: Optional[str] = "yahoo"):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
-    output = stock.get_stock_history(symbol, period)
+    output = stock.get_stock_history(symbol, period, proxy, stock_src)
     output['Date'] = output.index
     output['Date'] = output['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
     return {"symbol": symbol, "data": output.to_dict(orient='records')}

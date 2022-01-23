@@ -83,13 +83,14 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
                                          last_trade_days: Optional[int] = 3,
                                          ewma_his_vol_period: Optional[int] = 21,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
-                                         proxy: Optional[str] = None):
+                                         proxy: Optional[str] = None,
+                                         stock_src: Optional[str] = "yahoo"):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     stock_price, ewma_his_vol, contracts = \
         option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                              ewma_his_vol_period, ewma_his_vol_lambda, proxy)
+                                              ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src)
     if contracts is None or len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
@@ -105,6 +106,7 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                             ewma_his_vol_period: Optional[int] = 21,
                                             ewma_his_vol_lambda: Optional[float] = 0.94,
                                             proxy: Optional[str] = None,
+                                            stock_src: Optional[str] = "yahoo",
                                             with_heartbeat: Optional[bool] = True):
 
     class RunThread(threading.Thread):
@@ -116,7 +118,7 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
         def run(self):
             stock_price, ewma_his_vol, contracts = \
                 option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                                      ewma_his_vol_period, ewma_his_vol_lambda, proxy)
+                                                      ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src)
             if contracts is None or len(contracts) == 0:
                 self.output = {"symbol": symbol, "contracts": []}
             else:
