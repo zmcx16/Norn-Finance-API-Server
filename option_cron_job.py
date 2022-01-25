@@ -6,6 +6,7 @@ import json
 import logging
 import traceback
 import requests
+import argparse
 import threading
 import queue
 from fastapi.testclient import TestClient
@@ -152,7 +153,15 @@ if __name__ == "__main__":
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    stock_info = get_stock_info()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "-input-symbol-list", dest="input", default="", help="input image path")
+    args = parser.parse_args()
+
+    if args.input == "":
+        stock_info = get_stock_info()
+    else:
+        stock_info = args.input.split(",")
+
     logging.info(stock_info)
     FinanceAPIThread.reset_index(len(stock_info))
 
