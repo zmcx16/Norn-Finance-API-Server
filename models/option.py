@@ -32,6 +32,9 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
             expiry_datetime = date.fromisoformat(expiry_date)
             if expiry_max_datetime >= expiry_datetime >= expiry_min_datetime:
                 option_chain = ticker.option_chain(expiry_date, proxy=proxy)
+                if len(option_chain) == 0:
+                    logging.warning("{symbol}-{expiry_date} option_chain length = 0".format(symbol=symbol,
+                                                                                            expiry_date=expiry_date))
 
                 expiry_calls_puts = {"expiryDate": expiry_date, "calls": None, "puts": None}
                 calls_puts = [None] * 2
