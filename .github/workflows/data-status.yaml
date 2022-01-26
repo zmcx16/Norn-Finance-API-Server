@@ -3,7 +3,7 @@ name: data-status
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '30 23 * * 1,2,3,4,5'
+    - cron:  '59 23 * * 1,2,3,4,5'
 jobs:
   build:
     runs-on: macos-latest
