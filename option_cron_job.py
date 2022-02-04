@@ -25,6 +25,20 @@ THREAD_CNT = 1
 nf_client = TestClient(app)
 api_thread_lock = threading.Lock()
 
+min_price = 0.1
+output_args_list = [
+    {
+        "price_threshold": 0.1,
+        "premium_threshold": 1.00,
+        "discount_threshold": "NaN",
+    },
+    {
+        "price_threshold": 0.5,
+        "premium_threshold": "NaN",
+        "discount_threshold": -0.5,
+    },
+]
+
 
 def send_request(url):
     try:
@@ -114,8 +128,8 @@ class FinanceAPIThread(threading.Thread):
     @staticmethod
     def __get_option_valuation(symbol):
         try:
-            response = nf_client.get("/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94"
-                                                                                  "&stock_src=marketwatch")
+            response = nf_client.get("/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" +
+                                     "&stock_src=marketwatch" + "&min_price=" + str(min_price))
             if response.status_code != 200:
                 logging.error("get " + symbol + " option valuation failed")
                 return None
@@ -189,19 +203,6 @@ if __name__ == "__main__":
 
     # with open('output.json', 'r', encoding='utf-8') as f:
     #     output_data = json.load(f)
-
-    output_args_list = [
-        {
-            "price_threshold": 0.1,
-            "premium_threshold": 1.00,
-            "discount_threshold": "NaN",
-        },
-        {
-            "price_threshold": 0.5,
-            "premium_threshold": "NaN",
-            "discount_threshold": -0.5,
-        },
-    ]
 
     for output_arg in output_args_list:
         # save bias >= threshold output

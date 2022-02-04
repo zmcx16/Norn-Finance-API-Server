@@ -13,8 +13,8 @@ def get_option_date(symbol: str):
     return ticker.options
 
 
-def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_volume: int, last_trade_days: int,
-                     proxy=None):
+def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_volume: int, min_price: float,
+                     last_trade_days: int, proxy=None):
     # option_chain dataframe column:
     # calls, contractSymbol, lastTradeDate, strike, lastPrice, bid, ask,
     # change, percentChange, volume, openInterest, impliedVolatility,
@@ -41,6 +41,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                 for calls_puts_index in range(len(option_chain)):
                     d = option_chain[calls_puts_index]
                     d.drop(d[d.volume < min_volume].index, inplace=True)
+                    d.drop(d[d.lastPrice < min_price].index, inplace=True)
                     d.drop(d[pd.to_datetime(d.lastTradeDate).dt.date < (now - timedelta(days=last_trade_days)).date()].index, inplace=True)
                     d.dropna(subset=["lastTradeDate", "strike", "lastPrice", "bid", "ask", "change", "percentChange",
                                      "volume", "openInterest", "impliedVolatility"], inplace=True)
@@ -91,9 +92,9 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
     #  print(contracts)
 
 
-def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
+def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
                                    ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src="yahoo"):
-    contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
+    contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days, proxy)
     if len(contracts) == 0:
         return None, None, None
 

@@ -62,12 +62,14 @@ ws = FastAPI()
 async def options_chain_quotes(request: Request, response: Response, symbol: str, min_next_days: Optional[int] = 0,
                                max_next_days: Optional[int] = 45,
                                min_volume: Optional[int] = 10,
+                               min_price: Optional[float] = 0,
                                last_trade_days: Optional[int] = 3,
                                proxy: Optional[str] = None):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
-    contracts = option.get_option_chain(symbol, min_next_days, max_next_days, min_volume, last_trade_days, proxy)
+    contracts = option.get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
+                                        proxy)
     if len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
@@ -80,6 +82,7 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
 async def options_chain_quotes_valuation(request: Request, response: Response, symbol: str,
                                          min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
                                          min_volume: Optional[int] = 10,
+                                         min_price: Optional[float] = 0,
                                          last_trade_days: Optional[int] = 3,
                                          ewma_his_vol_period: Optional[int] = 21,
                                          ewma_his_vol_lambda: Optional[float] = 0.94,
@@ -89,8 +92,9 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     stock_price, ewma_his_vol, contracts = \
-        option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                              ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src)
+        option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
+                                              last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda, proxy,
+                                              stock_src)
     if contracts is None or len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
@@ -102,6 +106,7 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
 async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                             min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
                                             min_volume: Optional[int] = 10,
+                                            min_price: Optional[float] = 0,
                                             last_trade_days: Optional[int] = 3,
                                             ewma_his_vol_period: Optional[int] = 21,
                                             ewma_his_vol_lambda: Optional[float] = 0.94,
@@ -117,8 +122,9 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
 
         def run(self):
             stock_price, ewma_his_vol, contracts = \
-                option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, last_trade_days,
-                                                      ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src)
+                option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
+                                                      last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda, proxy,
+                                                      stock_src)
             if contracts is None or len(contracts) == 0:
                 self.output = {"symbol": symbol, "contracts": []}
             else:
