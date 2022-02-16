@@ -14,6 +14,11 @@ class ValuationData(BaseModel):
     BSM_EWMAHisVol: float
     MC_EWMAHisVol: float
     BT_EWMAHisVol: float
+    delta: float
+    gamma: float
+    vega: float
+    theta: float
+    rho: float
 
 
 class OptionsChainBaseData(BaseModel):

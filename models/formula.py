@@ -49,11 +49,40 @@ class Option:
 
     # B-S-M (Black-Scholes-Merton)
     @staticmethod
+    def d_1(s0, k, t, r, sigma, dv):
+        return (np.log(s0 / k) + (r - dv + .5 * sigma ** 2) * t) / sigma / np.sqrt(t)
+
+    @staticmethod
+    def d_2(s0, k, t, r, sigma, dv):
+        return Option.d_1(s0, k, t, r, sigma, dv) - sigma * np.sqrt(t)
+
+    @staticmethod
+    def delta(kind, s0, k, t, r, sigma, dv):
+        return kind * sps.norm.cdf(kind * Option.d_1(s0, k, t, r, sigma, dv))
+
+    @staticmethod
+    def gamma(s0, k, t, r, sigma, dv):
+        return sps.norm.pdf(Option.d_1(s0, k, t, r, sigma, dv)) / (s0 * sigma * np.sqrt(t))
+
+    @staticmethod
+    def vega(s0, k, t, r, sigma, dv):
+        return 0.01 * (s0 * sps.norm.pdf(Option.d_1(s0, k, t, r, sigma, dv)) * np.sqrt(t))
+
+    @staticmethod
+    def theta(kind, s0, k, t, r, sigma, dv):
+        return 0.01 * (-(s0 * sps.norm.pdf(Option.d_1(s0, k, t, r, sigma, dv)) * sigma) / (2 * np.sqrt(t)) -
+                       kind * r * k * np.exp(-r * t) * sps.norm.cdf(kind * Option.d_2(s0, k, t, r, sigma, dv)))
+
+    @staticmethod
+    def rho(kind, s0, k, t, r, sigma, dv):
+        return 0.01 * (kind * k * t * np.exp(-r * t) * sps.norm.cdf(kind * Option.d_2(s0, k, t, r, sigma, dv)))
+
+    @staticmethod
     def bs(european, kind, s0, k, t, r, sigma, dv):
         try:
             if european or kind == 1:
-                d_1 = (np.log(s0 / k) + (r - dv + .5 * sigma ** 2) * t) / sigma / np.sqrt(t)
-                d_2 = d_1 - sigma * np.sqrt(t)
+                d_1 = Option.d_1(s0, k, t, r, sigma, dv)
+                d_2 = Option.d_2(s0, k, t, r, sigma, dv)
                 return kind * s0 * np.exp(-dv * t) * sps.norm.cdf(
                     kind * d_1) - kind * k * np.exp(-r * t) * sps.norm.cdf(kind * d_2)
             else:

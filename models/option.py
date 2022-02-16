@@ -78,6 +78,22 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
             call["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, 1, stock_price, call['strike'],
                                                                time_2_maturity_year, risk_free_interest_rate,
                                                                volatility, dividends)
+
+            call["valuationData"]["delta"] = formula.Option.delta(1, stock_price, call['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call["valuationData"]["gamma"] = formula.Option.gamma(stock_price, call['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call["valuationData"]["vega"] = formula.Option.vega(stock_price, call['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call["valuationData"]["theta"] = formula.Option.theta(1, stock_price, call['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call["valuationData"]["rho"] = formula.Option.rho(1, stock_price, call['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
         for put in contract["puts"]:
             put["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
             put["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, -1, stock_price, put['strike'],
@@ -89,6 +105,22 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
             put["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, -1, stock_price, put['strike'],
                                                               time_2_maturity_year, risk_free_interest_rate,
                                                               volatility, dividends)
+
+            put["valuationData"]["delta"] = formula.Option.delta(-1, stock_price, put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            put["valuationData"]["gamma"] = formula.Option.gamma(stock_price, put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            put["valuationData"]["vega"] = formula.Option.vega(stock_price, put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            put["valuationData"]["theta"] = formula.Option.theta(-1, stock_price, put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            put["valuationData"]["rho"] = formula.Option.rho(-1, stock_price, put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
     #  print(contracts)
 
 
