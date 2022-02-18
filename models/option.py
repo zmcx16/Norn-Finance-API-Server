@@ -66,8 +66,11 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
     for contract in contracts:
         expiry_date = contract['expiryDate']
         expiry_datetime = date.fromisoformat(expiry_date)
-        time_2_maturity_year = np.busday_count(now, expiry_datetime) / 252.0
+        time_2_maturity_year = (np.busday_count(now, expiry_datetime)+1) / 252.0
         for call in contract["calls"]:
+            if time_2_maturity_year <= 0:
+                continue
+
             call["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
             call["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, 1, stock_price, call['strike'],
                                                                 time_2_maturity_year, risk_free_interest_rate,
@@ -95,6 +98,9 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
                                                                 time_2_maturity_year, risk_free_interest_rate,
                                                                 volatility, dividends)
         for put in contract["puts"]:
+            if time_2_maturity_year <= 0:
+                continue
+
             put["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
             put["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, -1, stock_price, put['strike'],
                                                                time_2_maturity_year, risk_free_interest_rate,
