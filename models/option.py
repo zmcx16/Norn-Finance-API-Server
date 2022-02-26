@@ -25,6 +25,15 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
     expiry_min_datetime = (now + timedelta(days=min_next_days)).date()
     expiry_max_datetime = (now + timedelta(days=max_next_days)).date()
 
+    last_trade_days_wo_weekend = last_trade_days
+    weekday = datetime.today().isoweekday()
+    if weekday == 7:
+        last_trade_days_wo_weekend = last_trade_days_wo_weekend + 1
+    elif weekday == 1:
+        last_trade_days_wo_weekend = last_trade_days_wo_weekend + 2
+    elif weekday == 2:
+        last_trade_days_wo_weekend = last_trade_days_wo_weekend + 3
+
     try:
         ticker = yf.Ticker(symbol)
         date_list = get_option_date(symbol)
@@ -42,7 +51,8 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                     d = option_chain[calls_puts_index]
                     d.drop(d[d.volume < min_volume].index, inplace=True)
                     d.drop(d[d.lastPrice < min_price].index, inplace=True)
-                    d.drop(d[pd.to_datetime(d.lastTradeDate).dt.date < (now - timedelta(days=last_trade_days)).date()].index, inplace=True)
+                    d.drop(d[pd.to_datetime(d.lastTradeDate).dt.date <
+                             (now - timedelta(days=last_trade_days_wo_weekend)).date()].index, inplace=True)
                     d.dropna(subset=["lastTradeDate", "strike", "lastPrice", "bid", "ask", "change", "percentChange",
                                      "volume", "openInterest", "impliedVolatility"], inplace=True)
                     d["lastTradeDate"] = d["lastTradeDate"].apply(lambda x: x.strftime('%Y-%m-%d'))
