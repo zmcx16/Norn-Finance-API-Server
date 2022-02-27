@@ -92,7 +92,7 @@ def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
     return None
 
 
-def predict_price_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
+def predict_price_mean_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
     stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
                                                                  p_lambda=ewma_his_vol_lambda)
@@ -101,3 +101,12 @@ def predict_price_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, 
     output = formula.Stock.predict_price_by_mc(stock_data["Close"][-1], mu, ewma_his_vol, days, iteration=iteration)
     final_price = output[:, -1]
     return final_price.mean()
+
+
+def predict_price_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
+    stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
+    ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
+                                                                 p_lambda=ewma_his_vol_lambda)
+    mu = formula.Common.compounded_return(stock_data["Close"])
+    output = formula.Stock.predict_price_by_mc(stock_data["Close"][-1], mu, ewma_his_vol, days, iteration=iteration)
+    return output

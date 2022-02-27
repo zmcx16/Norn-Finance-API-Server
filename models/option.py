@@ -155,23 +155,26 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
                 else:
                     loss_list.append(last_price)
             """
-            gain_list = np.where(expiry_predict_prices * kind > base_line * kind,
-                                 kind * (expiry_predict_prices - base_line), 0)
-            loss_list = np.where(expiry_predict_prices * kind <= base_line * kind, last_price, 0)
+            var_list = np.where(expiry_predict_prices * kind > base_line * kind,
+                                kind * (expiry_predict_prices - base_line), 0)
+            fixed_list = np.where(expiry_predict_prices * kind <= base_line * kind, last_price, 0)
 
-            gain_all = sum(gain_list)
-            loss_all = sum(loss_list)
-
-            p = np.count_nonzero(gain_list) * 1.0 / len(expiry_predict_prices)
-            q = np.count_nonzero(loss_list) * 1.0 / len(expiry_predict_prices)
-            if loss_all == 0:
-                call_put["valuationData"][key] = p
-            else:
-                b = gain_all / loss_all
-                if b == 0:
-                    call_put["valuationData"][key] = -2147483648
+            def calc(buy_sell, gain_list, loss_list):
+                gain_all = sum(gain_list)
+                loss_all = sum(loss_list)
+                p = np.count_nonzero(gain_list) * 1.0 / len(expiry_predict_prices)
+                q = np.count_nonzero(loss_list) * 1.0 / len(expiry_predict_prices)
+                if loss_all == 0:
+                    call_put["valuationData"][key + "_" + buy_sell] = p
                 else:
-                    call_put["valuationData"][key] = p - (q / b)
+                    b = gain_all / loss_all
+                    if b == 0:
+                        call_put["valuationData"][key + "_" + buy_sell] = -2147483648
+                    else:
+                        call_put["valuationData"][key + "_" + buy_sell] = p - (q / b)
+
+            calc("buy", var_list, fixed_list)
+            calc("sell", fixed_list, var_list)
 
         for call in contract["calls"]:
             kelly(call, 1)

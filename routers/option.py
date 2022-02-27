@@ -14,8 +14,10 @@ class ValuationData(BaseModel):
     BSM_EWMAHisVol: float
     MC_EWMAHisVol: float
     BT_EWMAHisVol: float
-    KellyCriterion: float
-    KellyCriterion_MU_0: float
+    KellyCriterion_buy: float
+    KellyCriterion_MU_0_buy: float
+    KellyCriterion_sell: float
+    KellyCriterion_MU_0_sell: float
     delta: float
     gamma: float
     vega: float
