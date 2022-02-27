@@ -67,10 +67,13 @@ def test_compounded_return_all():
 
 
 def test_predict_price_by_mc():
-    output = formula.Stock.predict_price_by_mc(100, 0.15, 0.15, 252, dt=1.0/252, iteration=100)
+    output = formula.Stock.predict_price_by_mc(100, 0.15, 0.15, 252, dt=1.0/252, iteration=10)
     assert len(output) != 0
-    # plot
     """
+    # plot
+    plt.xlabel("days")
+    plt.ylabel("Close Price")
+    plt.grid(linestyle='dotted')
     for i in range(len(output)):
         plt.plot(output[i], linewidth=0.5)
     plt.show()

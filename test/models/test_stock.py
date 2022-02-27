@@ -22,11 +22,16 @@ def test_predict_price_mean_by_mc():
 
 
 def test_predict_price_all_by_mc():
-    output = stock.predict_price_all_by_mc("T", 252, 0.92, 21, 100, stock_src="yahoo")
+    symbol = "T"
+    output = stock.predict_price_all_by_mc(symbol, 252, 0.92, 21, 100, stock_src="yahoo")
     assert output is not None
     print(output)
     """
     # plot
+    plt.title("Stock: " + symbol)
+    plt.xlabel("days")
+    plt.ylabel("Close Price")
+    plt.grid(linestyle='dotted')
     for i in range(len(output)):
         plt.plot(output[i], linewidth=0.5)
     plt.show()

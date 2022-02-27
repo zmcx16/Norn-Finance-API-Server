@@ -137,7 +137,7 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
 
     max_days = max(expiry_days_dict.values())
     output = formula.Stock.predict_price_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol, max_days+1,
-                                               iteration=50000)
+                                               iteration=10)
     for contract in contracts:
         expiry_date = contract['expiryDate']
         days = expiry_days_dict[expiry_date]
@@ -146,18 +146,22 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
         def kelly(call_put, kind):  # kind: call: 1, put: -1
             strike = call_put['strike']
             last_price = call_put['lastPrice']
-            base_line = strike + last_price
 
             """
             for p_price in expiry_predict_prices:
-                if p_price * kind > base_line * kind:
-                    gain_list.append(kind * (p_price - base_line))
+                if kind * p_price > kind * (strike + (kind * last_price)):
+                    gain_list.append(kind * (p_price - (strike + kind * last_price)))
+                elif kind * p_price > kind * strike:
+                    loss_list.append(kind * ((strike + kind * last_price) - p_price))
                 else:
                     loss_list.append(last_price)
             """
-            var_list = np.where(expiry_predict_prices * kind > base_line * kind,
-                                kind * (expiry_predict_prices - base_line), 0)
-            fixed_list = np.where(expiry_predict_prices * kind <= base_line * kind, last_price, 0)
+            var1_list = np.where(kind * expiry_predict_prices > kind * (strike + (kind * last_price)),
+                                 kind * (expiry_predict_prices - (strike + kind * last_price)), 0)
+            var2_list = np.where((kind * expiry_predict_prices > kind * strike) &
+                                 (kind * expiry_predict_prices <= kind * (strike + (kind * last_price))),
+                                 kind * ((strike + kind * last_price) - expiry_predict_prices), 0)
+            fixed_list = np.where(kind * expiry_predict_prices <= kind * strike, last_price, 0)
 
             def calc(buy_sell, gain_list, loss_list):
                 gain_all = sum(gain_list)
@@ -173,8 +177,8 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
                     else:
                         call_put["valuationData"][key + "_" + buy_sell] = p - (q / b)
 
-            calc("buy", var_list, fixed_list)
-            calc("sell", fixed_list, var_list)
+            calc("buy", var1_list, var2_list + fixed_list)
+            calc("sell", var2_list + fixed_list, var1_list)
 
         for call in contract["calls"]:
             kelly(call, 1)
