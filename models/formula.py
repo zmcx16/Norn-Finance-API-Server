@@ -4,9 +4,28 @@ import scipy.stats as sps
 import numpy as np
 
 
+class Common:
+    @staticmethod
+    def compounded_return(quotes):
+        return (quotes.iloc[-1] - quotes.iloc[0]) / quotes.iloc[0]
+
+    @staticmethod
+    def compounded_return_all(quotes):
+        log_returns = np.log(quotes / quotes.shift(1))
+        tr = np.exp(np.cumsum(log_returns)) - 1
+        return tr
+
+    @staticmethod
+    def compounded_return_year(quotes):
+        tr = Common.compounded_return(quotes)
+        irr = (1 + tr) ** (252 / len(quotes)) - 1
+        return irr
+
+
 class Volatility:
     @staticmethod
     def historical_volatility(quotes, trading_days):
+        # log_returns = np.log(quotes).diff(1)
         log_returns = np.log(quotes / quotes.shift(1))
         # return square root * trading days * log_returns variance
         return np.sqrt(trading_days * log_returns.var())
@@ -20,7 +39,7 @@ class Volatility:
 
         return vol_sum / total_cnt
 
-    @staticmethod
+    @staticmethod # ref https://blog.raymond-investment.com/stock-simulation-monte-carlo/
     def ewma_historical_volatility(data, period=21, trading_days=252, p_lambda=0.94):
         # a_i = l^(i-1) * (1-l) / (1-l^n)
         if p_lambda >= 1.0:
@@ -33,6 +52,26 @@ class Volatility:
             p_alpha_i = (p_lambda**alpha_i) * (1-p_lambda) / (1-p_lambda**total_cnt)
             output = output + p_alpha_i * Volatility.historical_volatility(data[i:i+period+1], trading_days)
 
+        return output
+
+
+class Stock:
+    # mu        Expected Return of asset
+    # sigma     Volatility
+    # dt        Instantaneous time (ex. 1/252)
+    # days      predict days
+
+    #  Monte Carlo
+    @staticmethod
+    def predict_price_by_mc(s0, mu, sigma, days, dt=1.0/252, iteration=1000000):
+        line_list = [s0 * np.ones(iteration)]
+        s = s0
+        for d in range(days):
+            zt = np.random.normal(0, 1, iteration)
+            s = s * np.exp((mu - 0.5 * sigma ** 2) * dt + sigma * np.sqrt(dt) * zt)
+            line_list.append(s)
+
+        output = np.array(line_list).transpose()
         return output
 
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from pytest import approx
 
 from models import formula
@@ -44,3 +45,33 @@ def test_ewma_historical_volatility_lambda_0():
     # lambda = 0 mean latest historical_volatility
     output = formula.Volatility.ewma_historical_volatility(data, 21, 252, 0)
     assert output == formula.Volatility.historical_volatility(data[len(data)-21-1:len(data)], 252)
+
+
+def test_compounded_return():
+    quotes = pd.Series(
+        np.array([14.387821, 14.226541, 14.769797, 15.015962, 15.414914, 16.068521, 16.060032, 15.796894, 15.881777,
+                  15.406426, 16.077011, 14.973518, 14.948055, 14.812241, 14.829216, 14.608518, 14.387821, 14.574565,
+                  14.014332, 14.218052, 13.708749, 14.209564]))
+    output = formula.Common.compounded_return(quotes)
+    assert output == approx(-0.012389, rel=1e-4)
+
+
+def test_compounded_return_all():
+    quotes = pd.Series(
+        np.array([14.387821, 14.226541, 14.769797, 15.015962, 15.414914, 16.068521, 16.060032, 15.796894, 15.881777,
+                  15.406426, 16.077011, 14.973518, 14.948055, 14.812241, 14.829216, 14.608518, 14.387821, 14.574565,
+                  14.014332, 14.218052, 13.708749, 14.209564]))
+    output = formula.Common.compounded_return_all(quotes)
+    assert len(output) == len(quotes)
+    assert output.iloc[-1] == approx(-0.012389, rel=1e-4)
+
+
+def test_predict_price_by_mc():
+    output = formula.Stock.predict_price_by_mc(100, 0.15, 0.15, 252, dt=1.0/252, iteration=100)
+    assert len(output) != 0
+    # plot
+    """
+    for i in range(len(output)):
+        plt.plot(output[i], linewidth=0.5)
+    plt.show()
+    """

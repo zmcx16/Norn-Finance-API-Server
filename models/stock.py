@@ -3,10 +3,10 @@ import logging
 import requests
 import csv
 from datetime import datetime, timedelta
-
 import yfinance as yf
 import pandas as pd
 
+from models import formula
 
 def is_float(value):
     try:
@@ -61,7 +61,7 @@ def get_stock_data_from_marketwatch(symbol, days):
     return None
 
 
-def get_stock_history(symbol: str, period: str, proxy=None, stock_src="yahoo"):
+def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
     try:
         if stock_src == "marketwatch":
             if period == "1mo":
@@ -90,3 +90,14 @@ def get_stock_history(symbol: str, period: str, proxy=None, stock_src="yahoo"):
         logging.error(traceback.format_exc())
 
     return None
+
+
+def predict_price_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
+    stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
+    ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
+                                                                 p_lambda=ewma_his_vol_lambda)
+
+    mu = formula.Common.compounded_return(stock_data["Close"])
+    output = formula.Stock.predict_price_by_mc(stock_data["Close"][-1], mu, ewma_his_vol, days, iteration=iteration)
+    final_price = output[:, -1]
+    return final_price.mean()

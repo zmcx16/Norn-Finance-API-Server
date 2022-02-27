@@ -77,67 +77,107 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
         expiry_date = contract['expiryDate']
         expiry_datetime = date.fromisoformat(expiry_date)
         time_2_maturity_year = (np.busday_count(now, expiry_datetime)+1) / 252.0
+
+        def calc(call_put, kind):  # kind: call: 1, put: -1
+            call_put["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
+            call_put["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, kind, stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call_put["valuationData"]["MC_EWMAHisVol"] = formula.Option.mc(False, kind, stock_price, call_put['strike'],
+                                                               time_2_maturity_year, risk_free_interest_rate,
+                                                               volatility, dividends)
+            call_put["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, kind, stock_price, call_put['strike'],
+                                                               time_2_maturity_year, risk_free_interest_rate,
+                                                               volatility, dividends)
+
+            call_put["valuationData"]["delta"] = formula.Option.delta(kind, stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call_put["valuationData"]["gamma"] = formula.Option.gamma(stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call_put["valuationData"]["vega"] = formula.Option.vega(stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call_put["valuationData"]["theta"] = formula.Option.theta(kind, stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+            call_put["valuationData"]["rho"] = formula.Option.rho(kind, stock_price, call_put['strike'],
+                                                                time_2_maturity_year, risk_free_interest_rate,
+                                                                volatility, dividends)
+
         for call in contract["calls"]:
             if time_2_maturity_year <= 0:
                 continue
+            calc(call, 1)
 
-            call["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
-            call["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, 1, stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            call["valuationData"]["MC_EWMAHisVol"] = formula.Option.mc(False, 1, stock_price, call['strike'],
-                                                               time_2_maturity_year, risk_free_interest_rate,
-                                                               volatility, dividends)
-            call["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, 1, stock_price, call['strike'],
-                                                               time_2_maturity_year, risk_free_interest_rate,
-                                                               volatility, dividends)
-
-            call["valuationData"]["delta"] = formula.Option.delta(1, stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            call["valuationData"]["gamma"] = formula.Option.gamma(stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            call["valuationData"]["vega"] = formula.Option.vega(stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            call["valuationData"]["theta"] = formula.Option.theta(1, stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            call["valuationData"]["rho"] = formula.Option.rho(1, stock_price, call['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
         for put in contract["puts"]:
             if time_2_maturity_year <= 0:
                 continue
+            calc(put, -1)
 
-            put["valuationData"] = {"BSM_EWMAHisVol": -1, "MC_EWMAHisVol": -1, "BT_EWMAHisVol": -1}
-            put["valuationData"]["BSM_EWMAHisVol"] = formula.Option.bs(False, -1, stock_price, put['strike'],
-                                                               time_2_maturity_year, risk_free_interest_rate,
-                                                               volatility, dividends)
-            put["valuationData"]["MC_EWMAHisVol"] = formula.Option.mc(False, -1, stock_price, put['strike'],
-                                                              time_2_maturity_year, risk_free_interest_rate,
-                                                              volatility, dividends)
-            put["valuationData"]["BT_EWMAHisVol"] = formula.Option.bt(False, -1, stock_price, put['strike'],
-                                                              time_2_maturity_year, risk_free_interest_rate,
-                                                              volatility, dividends)
-
-            put["valuationData"]["delta"] = formula.Option.delta(-1, stock_price, put['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            put["valuationData"]["gamma"] = formula.Option.gamma(stock_price, put['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            put["valuationData"]["vega"] = formula.Option.vega(stock_price, put['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            put["valuationData"]["theta"] = formula.Option.theta(-1, stock_price, put['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
-            put["valuationData"]["rho"] = formula.Option.rho(-1, stock_price, put['strike'],
-                                                                time_2_maturity_year, risk_free_interest_rate,
-                                                                volatility, dividends)
     #  print(contracts)
+
+
+def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_mu=False):
+    now = datetime.now().date()
+    key = "KellyCriterion"
+    if force_zero_mu:
+        key = "KellyCriterion_MU_0"
+
+    mu = 0
+    if not force_zero_mu:
+        mu = formula.Common.compounded_return(stock_close_data)
+
+    expiry_days_dict = {}
+    for contract in contracts:
+        expiry_date = contract['expiryDate']
+        expiry_datetime = date.fromisoformat(expiry_date)
+        expiry_days_dict[expiry_date] = np.busday_count(now, expiry_datetime) + 1
+
+    max_days = max(expiry_days_dict.values())
+    output = formula.Stock.predict_price_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol, max_days+1,
+                                               iteration=50000)
+    for contract in contracts:
+        expiry_date = contract['expiryDate']
+        days = expiry_days_dict[expiry_date]
+        expiry_predict_prices = output[:, days]
+
+        def kelly(call_put, kind):  # kind: call: 1, put: -1
+            strike = call_put['strike']
+            last_price = call_put['lastPrice']
+            base_line = strike + last_price
+
+            """
+            for p_price in expiry_predict_prices:
+                if p_price * kind > base_line * kind:
+                    gain_list.append(kind * (p_price - base_line))
+                else:
+                    loss_list.append(last_price)
+            """
+            gain_list = np.where(expiry_predict_prices * kind > base_line * kind,
+                                 kind * (expiry_predict_prices - base_line), 0)
+            loss_list = np.where(expiry_predict_prices * kind <= base_line * kind, last_price, 0)
+
+            gain_all = sum(gain_list)
+            loss_all = sum(loss_list)
+
+            p = np.count_nonzero(gain_list) * 1.0 / len(expiry_predict_prices)
+            q = np.count_nonzero(loss_list) * 1.0 / len(expiry_predict_prices)
+            if loss_all == 0:
+                call_put["valuationData"][key] = p
+            else:
+                b = gain_all / loss_all
+                if b == 0:
+                    call_put["valuationData"][key] = -2147483648
+                else:
+                    call_put["valuationData"][key] = p - (q / b)
+
+        for call in contract["calls"]:
+            kelly(call, 1)
+
+        for put in contract["puts"]:
+            kelly(put, -1)
 
 
 def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
@@ -151,4 +191,9 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
                                                                  p_lambda=ewma_his_vol_lambda)
     stock_price = stock_data["Close"][len(stock_data["Close"])-1]
     calc_option_valuation(contracts, stock_price, ewma_his_vol)
+
+    # calc kelly criterion
+    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, True)
+    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, False)
+
     return stock_price, ewma_his_vol, contracts

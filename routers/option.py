@@ -14,6 +14,8 @@ class ValuationData(BaseModel):
     BSM_EWMAHisVol: float
     MC_EWMAHisVol: float
     BT_EWMAHisVol: float
+    KellyCriterion: float
+    KellyCriterion_MU_0: float
     delta: float
     gamma: float
     vega: float
