@@ -63,7 +63,7 @@ class Stock:
 
     #  Monte Carlo
     @staticmethod
-    def predict_price_by_mc(s0, mu, sigma, days, dt=1.0/252, iteration=1000000):
+    def price_simulation_by_mc(s0, mu, sigma, days, dt=1.0/252, iteration=1000000):
         line_list = [s0 * np.ones(iteration)]
         s = s0
         for d in range(days):

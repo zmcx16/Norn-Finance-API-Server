@@ -15,15 +15,15 @@ def test_get_stock_history_marketwatch():
     print(output)
 
 
-def test_predict_price_mean_by_mc():
-    output = stock.predict_price_mean_by_mc("T", 252, 0.92, 21, 100000, stock_src="yahoo")
+def test_price_simulation_mean_by_mc():
+    output = stock.price_simulation_mean_by_mc("T", 252, 0.92, 21, 100000, stock_src="yahoo")
     assert output is not None
     print(output)
 
 
-def test_predict_price_all_by_mc():
+def test_price_simulation_all_by_mc():
     symbol = "T"
-    output = stock.predict_price_all_by_mc(symbol, 252, 0.92, 21, 100, stock_src="yahoo")
+    output = stock.price_simulation_all_by_mc(symbol, 252, 0.92, 21, 100, stock_src="yahoo")
     assert output is not None
     print(output)
     """

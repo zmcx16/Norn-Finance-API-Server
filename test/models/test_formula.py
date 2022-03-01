@@ -66,8 +66,8 @@ def test_compounded_return_all():
     assert output.iloc[-1] == approx(-0.012389, rel=1e-4)
 
 
-def test_predict_price_by_mc():
-    output = formula.Stock.predict_price_by_mc(100, 0.15, 0.15, 252, dt=1.0/252, iteration=10)
+def test_price_simulation_by_mc():
+    output = formula.Stock.price_simulation_by_mc(100, 0.15, 0.15, 252, dt=1.0/252, iteration=10)
     assert len(output) != 0
     """
     # plot
