@@ -136,8 +136,8 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
         expiry_days_dict[expiry_date] = np.busday_count(now, expiry_datetime) + 1
 
     max_days = max(expiry_days_dict.values())
-    output = formula.Stock.price_simulation_all_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol, max_days+1,
-                                               iteration=70000)
+    output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol,
+                                                      max_days+1, iteration=70000)
     for contract in contracts:
         expiry_date = contract['expiryDate']
         days = expiry_days_dict[expiry_date]
