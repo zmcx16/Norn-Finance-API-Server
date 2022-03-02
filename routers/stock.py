@@ -52,18 +52,18 @@ async def price_simulation_by_mc(request: Request, response: Response, symbol: s
                                  ewma_his_vol_period: Optional[int] = 21,
                                  ewma_his_vol_lambda: Optional[float] = 0.94,
                                  iteration: Optional[int] = Query(100, ge=1, le=100),
-                                 mu: Optional[float] = sys.float_info.max,
-                                 vol: Optional[float] = sys.float_info.max,
+                                 mu: Optional[float] = None,
+                                 vol: Optional[float] = None,
                                  proxy: Optional[str] = None, stock_src: Optional[str] = "yahoo"):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     mu_vol_type = stock.PriceSimulationType.MANUAL_ALL
-    if mu == sys.float_info.max and vol == sys.float_info.max:
+    if mu is None and vol is None:
         mu_vol_type = stock.PriceSimulationType.AUTO_GEN_MU_VOL
-    elif mu == sys.float_info.max:
+    elif mu is None:
         mu_vol_type = stock.PriceSimulationType.AUTO_GEN_MU
-    elif vol == sys.float_info.max:
+    elif vol is None:
         mu_vol_type = stock.PriceSimulationType.AUTO_GEN_VOL
 
     o = stock.price_simulation_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration,

@@ -7,11 +7,15 @@ A lightweight finance API server to get the US stocks, options data, and calcula
 
 # Support APIs
 * [GET]        /stock/history
+* [GET]        /stock/price-simulation-by-mc
 * [GET]        /option/quote
 * [GET]        /option/quote-valuation
 * [Websocket]  /option/quote-valuation
 
 API documents: https://norn-finance.zmcx16.moe/docs
+
+# Stock Price Simulation
+* Monte Carlo
 
 # Volatility Calculator
 * Historical Volatility
@@ -22,6 +26,7 @@ API documents: https://norn-finance.zmcx16.moe/docs
 * Black-Scholes-Merton
 * Monte Carlo
 * Binomial Tree
+* Kelly Criterion
 
 # DataSource 
 * Yahoo Finance
