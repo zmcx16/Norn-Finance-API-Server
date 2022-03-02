@@ -9,3 +9,9 @@ def test_stock_history():
     response = client.get("/stock/history?symbol=T")
     assert response.status_code == 200
     print(response.json())
+
+
+def test_price_simulation_by_mc():
+    response = client.get("/stock/price-simulation-by-mc?symbol=T")
+    assert response.status_code == 200
+    print(response.json())

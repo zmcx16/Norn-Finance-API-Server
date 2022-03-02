@@ -2,11 +2,20 @@ import traceback
 import logging
 import requests
 import csv
+from enum import Enum
 from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 
 from models import formula
+
+
+class PriceSimulationType(Enum):
+    AUTO_GEN_MU = 1
+    AUTO_GEN_VOL = 2
+    AUTO_GEN_MU_VOL = 3
+    MANUAL_ALL = 4
+
 
 def is_float(value):
     try:
@@ -103,10 +112,18 @@ def price_simulation_mean_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_
     return final_price.mean()
 
 
-def price_simulation_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
+def price_simulation_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration,
+                               mu_vol_type=PriceSimulationType.AUTO_GEN_MU_VOL, mu=0, ewma_his_vol=0, proxy=None,
+                               stock_src="yahoo"):
     stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
-    ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
-                                                                 p_lambda=ewma_his_vol_lambda)
-    mu = formula.Common.compounded_return(stock_data["Close"])
+
+    if mu_vol_type is PriceSimulationType.AUTO_GEN_VOL or mu_vol_type is PriceSimulationType.AUTO_GEN_MU_VOL:
+        ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"],
+                                                                     period=ewma_his_vol_period,
+                                                                     p_lambda=ewma_his_vol_lambda)
+
+    if mu_vol_type is PriceSimulationType.AUTO_GEN_MU or mu_vol_type is PriceSimulationType.AUTO_GEN_MU_VOL:
+        mu = formula.Common.compounded_return(stock_data["Close"])
+
     output = formula.Stock.price_simulation_by_mc(stock_data["Close"][-1], mu, ewma_his_vol, days, iteration=iteration)
     return output
