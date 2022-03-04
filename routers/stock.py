@@ -48,10 +48,10 @@ async def stock_history(request: Request, response: Response, symbol: str, perio
 @router.get("/price-simulation-by-mc", tags=["stock"], response_model=StockPriceSimulationByMCResponse)
 @limiter.app_limiter.limit("100/minute")
 async def price_simulation_by_mc(request: Request, response: Response, symbol: str,
-                                 days: Optional[int] = Query(252, ge=1, le=252),
+                                 days: Optional[int] = Query(30, ge=1, le=252),
                                  ewma_his_vol_period: Optional[int] = 21,
                                  ewma_his_vol_lambda: Optional[float] = 0.94,
-                                 iteration: Optional[int] = Query(100, ge=1, le=100),
+                                 iteration: Optional[int] = Query(10, ge=1, le=100),
                                  mu: Optional[float] = None,
                                  vol: Optional[float] = None,
                                  proxy: Optional[str] = None, stock_src: Optional[str] = "yahoo"):

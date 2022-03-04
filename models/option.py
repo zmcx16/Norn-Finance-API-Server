@@ -137,7 +137,7 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
 
     max_days = max(expiry_days_dict.values())
     output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol,
-                                                      max_days+1, iteration=80000)
+                                                      max_days+1, iteration=100000)
     for contract in contracts:
         expiry_date = contract['expiryDate']
         days = expiry_days_dict[expiry_date]
