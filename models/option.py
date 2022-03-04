@@ -187,8 +187,17 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
             kelly(put, -1)
 
 
+def filter_out_otm(contracts, stock_price):
+    for contract in contracts:
+        def filter_contract(call_put, kind):  # kind: call: 1, put: -1
+            return call_put["strike"] * kind >= stock_price * kind
+
+        contract["calls"] = [call for call in contract["calls"] if filter_contract(call, 1)]
+        contract["puts"] = [put for put in contract["puts"] if filter_contract(put, -1)]
+
+
 def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
-                                   ewma_his_vol_period, ewma_his_vol_lambda, proxy, stock_src="yahoo"):
+                                   ewma_his_vol_period, ewma_his_vol_lambda, only_otm, proxy, stock_src="yahoo"):
     contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days, proxy)
     if len(contracts) == 0:
         return None, None, None
@@ -197,6 +206,10 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
                                                                  p_lambda=ewma_his_vol_lambda)
     stock_price = stock_data["Close"][len(stock_data["Close"])-1]
+
+    if only_otm:
+        filter_out_otm(contracts, stock_price)
+
     calc_option_valuation(contracts, stock_price, ewma_his_vol)
 
     # calc kelly criterion

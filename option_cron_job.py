@@ -129,7 +129,7 @@ class FinanceAPIThread(threading.Thread):
     def __get_option_valuation(symbol):
         try:
             response = nf_client.get("/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" +
-                                     "&stock_src=marketwatch" + "&min_price=" + str(min_price))
+                                     "&stock_src=marketwatch" + "&min_price=" + str(min_price) + "&only_otm=true")
             if response.status_code != 200:
                 logging.error("get " + symbol + " option valuation failed")
                 return None

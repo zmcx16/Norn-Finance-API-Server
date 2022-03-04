@@ -16,7 +16,7 @@ def test_options_chain_quotes():
 
 
 def test_options_chain_quotes_valuation():
-    response = client.get("/option/quote-valuation?symbol=T&ewma_his_vol_lambda=0.94")
+    response = client.get("/option/quote-valuation?symbol=T&ewma_his_vol_lambda=0.94&only_otm=true")
     assert response.status_code == 200
     print(response.json())
 
