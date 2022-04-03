@@ -14,12 +14,24 @@ def get_option_date(symbol: str):
 
 
 def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_volume: int, min_price: float,
-                     last_trade_days: int, proxy=None):
+                     last_trade_days: int, specific_contract=None, proxy=None):
     # option_chain dataframe column:
     # calls, contractSymbol, lastTradeDate, strike, lastPrice, bid, ask,
     # change, percentChange, volume, openInterest, impliedVolatility,
     # inTheMoney, contractSize, currency
     contracts = []
+
+    specific_call_put = -1
+    specific_expiry_date = None
+    specific_strike = -1
+    if specific_contract and specific_contract.count('_') == 2:
+        temp = specific_contract.split("_")
+        if temp[0] == "call":
+            specific_call_put = 0
+        elif temp[0] == "put":
+            specific_call_put = 1
+        specific_expiry_date = temp[1]
+        specific_strike = float(temp[2])
 
     now = datetime.now()
     expiry_min_datetime = (now + timedelta(days=min_next_days)).date()
@@ -38,6 +50,9 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
         ticker = yf.Ticker(symbol)
         date_list = get_option_date(symbol)
         for expiry_date in date_list:
+            if specific_expiry_date and expiry_date != specific_expiry_date:
+                continue
+
             expiry_datetime = date.fromisoformat(expiry_date)
             if expiry_max_datetime >= expiry_datetime >= expiry_min_datetime:
                 option_chain = ticker.option_chain(expiry_date, proxy=proxy)
@@ -45,7 +60,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                     logging.warning("{symbol}-{expiry_date} option_chain length = 0".format(symbol=symbol,
                                                                                             expiry_date=expiry_date))
 
-                expiry_calls_puts = {"expiryDate": expiry_date, "calls": None, "puts": None}
+                expiry_calls_puts = {"expiryDate": expiry_date, "calls": [], "puts": []}
                 calls_puts = [None] * 2
                 for calls_puts_index in range(len(option_chain)):
                     d = option_chain[calls_puts_index]
@@ -56,11 +71,22 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                     d.dropna(subset=["lastTradeDate", "strike", "lastPrice", "bid", "ask", "change", "percentChange",
                                      "volume", "openInterest", "impliedVolatility"], inplace=True)
                     d["lastTradeDate"] = d["lastTradeDate"].apply(lambda x: x.strftime('%Y-%m-%d'))
+
+                    if specific_strike != -1:
+                        d.drop(d[(specific_strike < d.strike-0.00001) | (specific_strike > d.strike+0.00001)].index,
+                               inplace=True)
+
                     calls_puts[calls_puts_index] = d.to_dict(orient='records')
 
                 if len(calls_puts[0]) > 0 or len(calls_puts[1]) > 0:
-                    expiry_calls_puts["calls"] = calls_puts[0]
-                    expiry_calls_puts["puts"] = calls_puts[1]
+                    if specific_call_put == 0:
+                        expiry_calls_puts["calls"] = calls_puts[0]
+                    elif specific_call_put == 1:
+                        expiry_calls_puts["puts"] = calls_puts[1]
+                    else:
+                        expiry_calls_puts["calls"] = calls_puts[0]
+                        expiry_calls_puts["puts"] = calls_puts[1]
+
                     contracts.append(expiry_calls_puts)
 
     except Exception:
@@ -197,8 +223,10 @@ def filter_out_otm(contracts, stock_price):
 
 
 def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
-                                   ewma_his_vol_period, ewma_his_vol_lambda, only_otm, proxy, stock_src="yahoo"):
-    contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days, proxy)
+                                   ewma_his_vol_period, ewma_his_vol_lambda, only_otm, specific_contract, proxy,
+                                   stock_src="yahoo"):
+    contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
+                                 specific_contract, proxy)
     if len(contracts) == 0:
         return None, None, None
 
