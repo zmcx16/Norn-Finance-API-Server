@@ -92,11 +92,12 @@ class FinanceAPIThread(threading.Thread):
             try:
                 data = self.task_queue.get()
                 symbol = data["symbol"]
+                specific_contract_args = data["specific_contract_args"]
                 logging.info("({current_index}/{total_cnt}) get {symbol}".format(
                     current_index=FinanceAPIThread.current_index,
                     total_cnt=FinanceAPIThread.total_cnt, symbol=symbol))
 
-                resp = FinanceAPIThread.__get_option_valuation(symbol)
+                resp = FinanceAPIThread.__get_option_valuation(symbol, specific_contract_args)
                 if resp is None:
                     logging.error("get {symbol} failed".format(symbol=symbol))
                 elif len(resp['contracts']) == 0:
@@ -126,10 +127,17 @@ class FinanceAPIThread(threading.Thread):
         api_thread_lock.release()
 
     @staticmethod
-    def __get_option_valuation(symbol):
+    def __get_option_valuation(symbol, specific_contract_args):
         try:
-            response = nf_client.get("/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" +
-                                     "&stock_src=marketwatch" + "&min_price=" + str(min_price) + "&only_otm=true")
+            if specific_contract_args != "":
+                api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
+                      "&stock_src=marketwatch&specific_contract=" + specific_contract_args + \
+                      "&max_next_days=252&min_volume=0&last_trade_days=252"
+            else:
+                api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
+                      "&stock_src=marketwatch" + "&min_price=" + str(min_price) + "&only_otm=true"
+
+            response = nf_client.get(api)
             if response.status_code != 200:
                 logging.error("get " + symbol + " option valuation failed")
                 return None
@@ -167,22 +175,34 @@ if __name__ == "__main__":
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
+    task_queue = queue.Queue()
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "-input-symbol-list", dest="input", default="", help="input image path")
+    parser.add_argument("-i", "-input-symbol-list", dest="input", default="")
+    parser.add_argument("-s", "-specific-contract", dest="specific_contract", default="")
     args = parser.parse_args()
 
-    if args.input == "":
-        stock_info = get_stock_info()
+    if args.specific_contract == "":
+        if args.input == "":
+            stock_info = get_stock_info()
+        else:
+            stock_info = args.input.split(",")
+
+        logging.info(stock_info)
+        FinanceAPIThread.reset_index(len(stock_info))
+
+        for symbol in stock_info:
+            data = {"symbol": symbol, "specific_contract_args": ""}
+            task_queue.put(data)
     else:
-        stock_info = args.input.split(",")
+        logging.info(args.specific_contract)
+        specific_contracts = args.specific_contract.split(",")
+        FinanceAPIThread.reset_index(len(specific_contracts))
 
-    logging.info(stock_info)
-    FinanceAPIThread.reset_index(len(stock_info))
-
-    task_queue = queue.Queue()
-    for symbol in stock_info:
-        data = {"symbol": symbol}
-        task_queue.put(data)
+        for sc in specific_contracts:
+            symbol_args = sc.split('_', 1)
+            data = {"symbol": symbol_args[0], "specific_contract_args": symbol_args[1]}
+            task_queue.put(data)
 
     work_list = []
     for index in range(THREAD_CNT):
