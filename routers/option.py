@@ -69,7 +69,7 @@ ws = FastAPI()
 @router.get("/quote", tags=["quote"], response_model=OptionsChainQuotesResponse)
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes(request: Request, response: Response, symbol: str, min_next_days: Optional[int] = 0,
-                               max_next_days: Optional[int] = 45,
+                               max_next_days: Optional[int] = 40,
                                min_volume: Optional[int] = 10,
                                min_price: Optional[float] = 0,
                                last_trade_days: Optional[int] = 3,
@@ -90,7 +90,7 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
 @router.get("/quote-valuation", tags=["quote"], response_model=OptionsChainQuotesValuationResponse)
 @limiter.app_limiter.limit("100/minute")
 async def options_chain_quotes_valuation(request: Request, response: Response, symbol: str,
-                                         min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
+                                         min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 40,
                                          min_volume: Optional[int] = 10,
                                          min_price: Optional[float] = 0,
                                          last_trade_days: Optional[int] = 3,
@@ -116,7 +116,7 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
 
 @ws.websocket("/option/quote-valuation")
 async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
-                                            min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 45,
+                                            min_next_days: Optional[int] = 0, max_next_days: Optional[int] = 40,
                                             min_volume: Optional[int] = 10,
                                             min_price: Optional[float] = 0,
                                             last_trade_days: Optional[int] = 3,
