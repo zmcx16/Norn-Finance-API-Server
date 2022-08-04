@@ -169,7 +169,6 @@ def check_over_diff(last_price, estimated_price, premium_threshold, discount_thr
 if __name__ == "__main__":
 
     start_time = time.perf_counter()
-    logging.basicConfig(level=logging.DEBUG)
     root = pathlib.Path(__file__).parent.resolve()
     output_folder = root / "output"
     if not os.path.exists(output_folder):
@@ -180,7 +179,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "-input-symbol-list", dest="input", default="")
     parser.add_argument("-s", "-specific-contract", dest="specific_contract", default="")
+    parser.add_argument("-l", "-log-level", dest="log_level", default="DEBUG")
     args = parser.parse_args()
+
+    logging.basicConfig(level=args.log_level)
 
     if args.specific_contract == "":
         if args.input == "":
