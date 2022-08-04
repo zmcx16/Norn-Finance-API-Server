@@ -93,7 +93,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
         logging.error(traceback.format_exc())
         return None
 
-    # print(contracts)
+    # logging.info(contracts)
     return contracts
 
 
@@ -142,7 +142,7 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
                 continue
             calc(put, -1)
 
-    #  print(contracts)
+    #  logging.info(contracts)
 
 
 def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_mu=False):

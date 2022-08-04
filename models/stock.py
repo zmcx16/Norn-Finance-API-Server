@@ -46,7 +46,7 @@ def get_stock_data_from_marketwatch(symbol, days):
     try:
         ret, content = send_request(query_url)
         if ret == 0:
-            # print(content)
+            # logging.info(content)
             lines = content.splitlines()
             read_csv = csv.reader(lines)
             headers = next(read_csv)
@@ -62,7 +62,7 @@ def get_stock_data_from_marketwatch(symbol, days):
 
             return output
         else:
-            print('send_request failed: {ret}'.format(ret=ret))
+            logging.info('send_request failed: {ret}'.format(ret=ret))
 
     except Exception:
         logging.error(traceback.format_exc())

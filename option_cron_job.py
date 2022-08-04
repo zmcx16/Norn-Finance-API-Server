@@ -143,7 +143,7 @@ class FinanceAPIThread(threading.Thread):
                 return None
 
             option_data = response.json()
-            print(option_data)
+            logging.info(option_data)
             return option_data
         except Exception:
             logging.error(traceback.format_exc())
@@ -255,8 +255,8 @@ if __name__ == "__main__":
             if len(t["contracts"]) > 0:
                 bias_output.append(t)
 
-        # print(bias_output)
-        print(len(bias_output))
+        # logging.info(bias_output)
+        logging.info(len(bias_output))
         with open(output_folder / 'output_bias_{t1}_{t2}_{t3}.json'.format(
                 t1=price_threshold, t2=premium_threshold, t3=discount_threshold), 'w', encoding='utf-8') as f:
             f.write(json.dumps(bias_output, separators=(',', ':')))
