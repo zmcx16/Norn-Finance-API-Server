@@ -80,11 +80,12 @@ class FinanceAPIThread(threading.Thread):
     current_index = 0
     total_cnt = 0
 
-    def __init__(self, id, task_queue):
+    def __init__(self, id, task_queue, data_source):
         threading.Thread.__init__(self)
         self.id = id
         self.task_queue = task_queue
         self.output = []
+        self.data_source = data_source
 
     def run(self):
         logging.info("Thread " + str(self.id) + "start")
@@ -97,7 +98,7 @@ class FinanceAPIThread(threading.Thread):
                     current_index=FinanceAPIThread.current_index,
                     total_cnt=FinanceAPIThread.total_cnt, symbol=symbol))
 
-                resp = FinanceAPIThread.__get_option_valuation(symbol, specific_contract_args)
+                resp = FinanceAPIThread.__get_option_valuation(symbol, specific_contract_args, self.data_source)
                 if resp is None:
                     logging.error("get {symbol} failed".format(symbol=symbol))
                 elif len(resp['contracts']) == 0:
@@ -127,15 +128,15 @@ class FinanceAPIThread(threading.Thread):
         api_thread_lock.release()
 
     @staticmethod
-    def __get_option_valuation(symbol, specific_contract_args):
+    def __get_option_valuation(symbol, specific_contract_args, data_source):
         try:
             if specific_contract_args != "":
                 api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
-                      "&stock_src=marketwatch&specific_contract=" + specific_contract_args + \
+                      "&stock_src=" + data_source + "&specific_contract=" + specific_contract_args + \
                       "&max_next_days=252&min_volume=0&last_trade_days=252"
             else:
                 api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
-                      "&stock_src=marketwatch" + "&min_price=" + str(min_price) + "&only_otm=true"
+                      "&stock_src=" + data_source + "&min_price=" + str(min_price) + "&only_otm=true"
 
             response = nf_client.get(api)
             if response.status_code != 200:
@@ -180,6 +181,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "-input-symbol-list", dest="input", default="")
     parser.add_argument("-s", "-specific-contract", dest="specific_contract", default="")
     parser.add_argument("-l", "-log-level", dest="log_level", default="DEBUG")
+    parser.add_argument("-d", "-data-source", dest="data_source", default="marketwatch")
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
@@ -208,7 +210,7 @@ if __name__ == "__main__":
 
     work_list = []
     for index in range(THREAD_CNT):
-        work_list.append(FinanceAPIThread(index, task_queue))
+        work_list.append(FinanceAPIThread(index, task_queue, args.data_source))
         work_list[index].start()
 
     for worker in work_list:
