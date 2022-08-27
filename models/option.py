@@ -3,9 +3,16 @@ import pandas as pd
 import traceback
 import yfinance as yf
 import logging
+from enum import Enum
 from datetime import date, datetime, timedelta
 
 from models import formula, stock
+
+
+class CalcKellyType(Enum):
+    KellyCriterion = 1
+    KellyCriterion_MU_0 = 2
+    KellyCriterion_IV = 3
 
 
 def get_option_date(symbol: str):
@@ -145,14 +152,12 @@ def calc_option_valuation(contracts, stock_price, volatility, risk_free_interest
     #  logging.info(contracts)
 
 
-def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_mu=False):
+def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, calc_kelly_type, iteration):
     now = datetime.now().date()
-    key = "KellyCriterion"
-    if force_zero_mu:
-        key = "KellyCriterion_MU_0"
+    key = calc_kelly_type.name
 
     mu = 0
-    if not force_zero_mu:
+    if calc_kelly_type is CalcKellyType.KellyCriterion:
         mu = formula.Common.compounded_return(stock_close_data)
 
     expiry_days_dict = {}
@@ -162,14 +167,25 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
         expiry_days_dict[expiry_date] = np.busday_count(now, expiry_datetime) + 1
 
     max_days = max(expiry_days_dict.values())
-    output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol,
-                                                      max_days+1, iteration=100000)
+
+    if calc_kelly_type is not CalcKellyType.KellyCriterion_IV:
+        output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol,
+                                                      max_days+1, iteration=iteration)
     for contract in contracts:
         expiry_date = contract['expiryDate']
         days = expiry_days_dict[expiry_date]
-        expiry_predict_prices = output[:, days]
+        expiry_predict_prices_t = None
+        if calc_kelly_type is not CalcKellyType.KellyCriterion_IV:
+            expiry_predict_prices_t = output[:, days]
 
-        def kelly(call_put, kind):  # kind: call: 1, put: -1
+        def kelly(call_put, kind, expiry_predict_prices_temp):  # kind: call: 1, put: -1
+            expiry_predict_prices = expiry_predict_prices_temp
+            if calc_kelly_type is CalcKellyType.KellyCriterion_IV:
+                iv = call_put['impliedVolatility']
+                output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data) - 1], 0,
+                                                              iv, days + 1, iteration=50000)
+                expiry_predict_prices = output[:, days]
+
             strike = call_put['strike']
             last_price = call_put['lastPrice']
 
@@ -207,10 +223,10 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, force_zero_m
             calc("sell", var2_list + fixed_list, var1_list)
 
         for call in contract["calls"]:
-            kelly(call, 1)
+            kelly(call, 1, expiry_predict_prices_t)
 
         for put in contract["puts"]:
-            kelly(put, -1)
+            kelly(put, -1, expiry_predict_prices_t)
 
 
 def filter_out_otm(contracts, stock_price):
@@ -224,7 +240,7 @@ def filter_out_otm(contracts, stock_price):
 
 def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
                                    ewma_his_vol_period, ewma_his_vol_lambda, only_otm, specific_contract, proxy,
-                                   stock_src="yahoo"):
+                                   stock_src="yahoo", calc_kelly_iv=False, iteration=100000):
     contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
                                  specific_contract, proxy)
     if len(contracts) == 0:
@@ -241,7 +257,9 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
     calc_option_valuation(contracts, stock_price, ewma_his_vol)
 
     # calc kelly criterion
-    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, True)
-    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, False)
+    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, CalcKellyType.KellyCriterion, iteration)
+    calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, CalcKellyType.KellyCriterion_MU_0, iteration)
+    if calc_kelly_iv:
+        calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, CalcKellyType.KellyCriterion_IV, iteration)
 
     return stock_price, ewma_his_vol, contracts

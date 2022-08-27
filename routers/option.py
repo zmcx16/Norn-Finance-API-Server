@@ -15,9 +15,11 @@ class ValuationData(BaseModel):
     MC_EWMAHisVol: float
     BT_EWMAHisVol: float
     KellyCriterion_buy: float
-    KellyCriterion_MU_0_buy: float
     KellyCriterion_sell: float
     KellyCriterion_MU_0_sell: float
+    KellyCriterion_MU_0_buy: float
+    KellyCriterion_IV_buy: Optional[float]
+    KellyCriterion_IV_sell: Optional[float]
     delta: float
     gamma: float
     vega: float
@@ -99,14 +101,16 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
                                          only_otm: Optional[bool] = False,
                                          specific_contract: Optional[str] = None,
                                          proxy: Optional[str] = None,
-                                         stock_src: Optional[str] = "yahoo"):
+                                         stock_src: Optional[str] = "yahoo",
+                                         calc_kelly_iv: Optional[bool] = False,
+                                         iteration: Optional[int] = 100000):
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     stock_price, ewma_his_vol, contracts = \
         option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
                                               last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda, only_otm,
-                                              specific_contract, proxy, stock_src)
+                                              specific_contract, proxy, stock_src, calc_kelly_iv, iteration)
     if contracts is None or len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
@@ -126,6 +130,8 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
                                             specific_contract: Optional[str] = None,
                                             proxy: Optional[str] = None,
                                             stock_src: Optional[str] = "yahoo",
+                                            calc_kelly_iv: Optional[bool] = False,
+                                            iteration: Optional[int] = 100000,
                                             with_heartbeat: Optional[bool] = True):
 
     class RunThread(threading.Thread):
@@ -138,7 +144,8 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             stock_price, ewma_his_vol, contracts = \
                 option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
                                                       last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda,
-                                                      only_otm, specific_contract, proxy, stock_src)
+                                                      only_otm, specific_contract, proxy, stock_src, calc_kelly_iv,
+                                                      iteration)
             if contracts is None or len(contracts) == 0:
                 self.output = {"symbol": symbol, "contracts": []}
             else:
