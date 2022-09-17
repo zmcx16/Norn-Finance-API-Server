@@ -1,13 +1,16 @@
 import traceback
 import logging
-import requests
+import time
 import csv
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import yfinance as yf
 import pandas as pd
+from bs4 import BeautifulSoup
+from lxml import etree
 
 from models import formula
+from utils import web
 
 
 class PriceSimulationType(Enum):
@@ -25,15 +28,8 @@ def is_float(value):
         return False
 
 
-def send_request(url):
-    try:
-        res = requests.get(url)
-        res.raise_for_status()
-    except Exception as ex:
-        logging.error(traceback.format_exc())
-        return -1, ex
-
-    return 0, res.text
+def get_stock(symbol):
+    return yf.Ticker(symbol)
 
 
 def get_stock_data_from_marketwatch(symbol, days):
@@ -44,7 +40,7 @@ def get_stock_data_from_marketwatch(symbol, days):
     query_url = "https://www.marketwatch.com/investing/stock/" + symbol + "/downloaddatapartial?startdate=" + start_date + "&enddate=" + end_date + "&daterange=d30&frequency=p1d&csvdownload=true&downloadpartial=false&newdates=false"
 
     try:
-        ret, content = send_request(query_url)
+        ret, content = web.send_request(query_url)
         if ret == 0:
             # logging.info(content)
             lines = content.splitlines()
@@ -62,7 +58,7 @@ def get_stock_data_from_marketwatch(symbol, days):
 
             return output
         else:
-            logging.info('send_request failed: {ret}'.format(ret=ret))
+            logging.error('send_request failed: {ret}'.format(ret=ret))
 
     except Exception:
         logging.error(traceback.format_exc())
@@ -72,6 +68,7 @@ def get_stock_data_from_marketwatch(symbol, days):
 
 def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
     try:
+        extra_info = {"earningsDate": ""}
         if stock_src == "marketwatch":
             if period == "1mo":
                 days = 30
@@ -90,19 +87,20 @@ def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
                 stock_data_df = stock_data_df[::-1]  # reverse order
                 stock_data_df = stock_data_df.set_index(pd.DatetimeIndex(stock_data_df['Date']))
                 stock_data_df.drop(columns=['Date'], inplace=True)
-                return stock_data_df
+                return stock_data_df, extra_info
         else:
             ticker = yf.Ticker(symbol)
-            return ticker.history(period=period, proxy=proxy)
+            extra_info["earningsDate"] = ' - '.join(ticker.calendar.iloc[0].astype(str).array)
+            return ticker.history(period=period, proxy=proxy), extra_info
 
     except Exception:
         logging.error(traceback.format_exc())
 
-    return None
+    return None, None
 
 
 def price_simulation_mean_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration, proxy=None, stock_src="yahoo"):
-    stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
+    stock_data, extra_info = get_stock_history(symbol, "1y", proxy, stock_src)
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
                                                                  p_lambda=ewma_his_vol_lambda)
 
@@ -115,7 +113,7 @@ def price_simulation_mean_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_
 def price_simulation_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_period, iteration,
                                mu_vol_type=PriceSimulationType.AUTO_GEN_MU_VOL, mu=0, ewma_his_vol=0, proxy=None,
                                stock_src="yahoo"):
-    stock_data = get_stock_history(symbol, "1y", proxy, stock_src)
+    stock_data, extra_info = get_stock_history(symbol, "1y", proxy, stock_src)
 
     if mu_vol_type is PriceSimulationType.AUTO_GEN_VOL or mu_vol_type is PriceSimulationType.AUTO_GEN_MU_VOL:
         ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"],
@@ -126,4 +124,71 @@ def price_simulation_all_by_mc(symbol, days, ewma_his_vol_lambda, ewma_his_vol_p
         mu = formula.Common.compounded_return(stock_data["Close"])
 
     output = formula.Stock.price_simulation_by_mc(stock_data["Close"][-1], mu, ewma_his_vol, days, iteration=iteration)
+    return output
+
+
+def get_ex_dividend_list():
+    logging.info('get_ex_dividend_list start')
+    url = 'https://www.dividend.com/api/t2/body.html/'
+    headers = {
+        'sec-ch-ua': 'Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105',
+        'Accept': 'application/json, text/plain, */*',
+        'DNT': '1',
+        'Content-Type': 'application/json;charset=UTF-8',
+        'sec-ch-ua-mobile': '?0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        'sec-ch-ua-platform': 'Windows',
+        'Origin': 'https://www.dividend.com',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+        'Referer': 'https://www.dividend.com/ex-dividend-dates/',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7'
+    }
+
+    output = {'data': []}
+    max_page = 100
+
+    for p in range(1, max_page):
+        payload = '{"uuid":"Merged-SEOTable","default_filters":[{"filterKey":"ShareClass","value":["Commons"],"filterType":"FilterShareClass","filterCollection":["CollectionMergedStocks"],"esType":"keyword"}],"tab":"TblTabDivMergedExDiv",' \
+                  '"page":' + str(p) +\
+            ',"collection":"CollectionMergedStocks","sort_by":{"PayoutNextExDate":"asc"},"theme":"FIN::L1(Dividend Income)","modal_key":null,"modal_keyword":null,"special_theme":"EX_DATE_YEAR_FROM_NOW","ad_unit_full_path":"/2143012/Div/Theme/ExDate","no_content_tray_ads_in_table":false}'
+        ret, content = web.send_post(url, headers, payload)
+        if ret == 0:
+            # logging.info(content)
+            # mp-table-body
+            soup = BeautifulSoup(content, "html.parser")
+            dom = etree.HTML(str(soup))
+            rows = dom.xpath('//div[@class="mp-table-body-row"]')
+            for row in rows:
+                # r = etree.tostring(row, pretty_print=True)
+                cells = [elem for elem in row.iter() if elem is not row]
+                div_i = 0
+                # NAME | YIELD | DIV | FREQ | DEC-DATE | EX-DATE | PAY-DATE | AMOUNT | LAST_AMOUNT
+                row_output = {"symbol": "", "link": "", "ex_dividend_date": ""}
+                for i, _ in enumerate(cells):
+                    if cells[i].tag == 'div':
+                        div_i += 1
+
+                    if div_i == 2 and row_output['symbol'] == "":
+                        row_output['link'] = "https://www.dividend.com" + cells[i+1].attrib['href']
+                        row_output['symbol'] = cells[i+4].text
+                    if div_i == 6 and row_output['ex_dividend_date'] == "":  # EX-DATE
+                        month_day = cells[i+1].text.split('/')
+                        year = cells[i+2].text
+                        ymd = date(int(year), int(month_day[0]), int(month_day[1]))
+                        row_output["ex_dividend_date"] = ymd.strftime('%Y-%m-%d')
+
+                        logging.info('get ' + row_output['symbol'] + ' ex-dividend done')
+                        break
+
+                output['data'].append(row_output)
+        else:
+            logging.info('send_post failed or done: {ret}'.format(ret=ret))
+            break
+
+        time.sleep(1)
+
+    logging.info('get_ex_dividend_list end')
     return output

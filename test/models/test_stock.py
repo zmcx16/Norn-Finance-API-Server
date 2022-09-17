@@ -3,14 +3,42 @@ import matplotlib.pyplot as plt
 from models import stock
 
 
+def test_get_stock():
+    output = stock.get_stock("T")
+    assert output is not None
+    print("******* actions *******")
+    print(output.actions)
+    print("***********************")
+    print("****** dividends ******")
+    print(output.dividends)
+    print("***********************")
+    print("****** calendar *******")
+    print(output.calendar)
+    print("***********************")
+    print("*** earnings_dates ****")
+    print(output.earnings_dates)
+    print("***********************")
+    print("******** news *********")
+    print(output.news)
+    print("***********************")
+
+
+def test_get_ex_dividend_list():
+    output = stock.get_ex_dividend_list()
+    assert output is not None
+    assert len(output['data']) > 0
+    print(output)
+    print(len(output['data']))
+
+
 def test_get_stock_history_yahoo():
-    output = stock.get_stock_history("T", "1y", proxy=None, stock_src="yahoo")
+    output, extra_info = stock.get_stock_history("T", "1y", proxy=None, stock_src="yahoo")
     assert output is not None
     print(output)
 
 
 def test_get_stock_history_marketwatch():
-    output = stock.get_stock_history("T", "1y", proxy=None, stock_src="marketwatch")
+    output, extra_info = stock.get_stock_history("T", "1y", proxy=None, stock_src="marketwatch")
     assert output is not None
     print(output)
 

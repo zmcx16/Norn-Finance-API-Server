@@ -41,6 +41,10 @@ class OptionsChainBaseData(BaseModel):
     valuationData: Optional[ValuationData]
 
 
+class StockExtraInfo(BaseModel):
+    earningsDate: str
+
+
 class OptionsChainQuotesData(BaseModel):
     expiryDate: str
     calls: List[OptionsChainBaseData]
@@ -50,12 +54,14 @@ class OptionsChainQuotesData(BaseModel):
 class OptionsChainQuotesResponse(BaseModel):
     symbol: str
     stockPrice: Optional[float]
+    stockExtraInfo: Optional[StockExtraInfo]
     contracts: List[OptionsChainQuotesData]
 
 
 class OptionsChainQuotesValuationResponse(BaseModel):
     symbol: str
     stockPrice: Optional[float]
+    stockExtraInfo: Optional[StockExtraInfo]
     EWMA_historicalVolatility: Optional[float]
     contracts: List[OptionsChainQuotesData]
 
@@ -85,8 +91,9 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
     if len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
-    stock_data = stock.get_stock_history(symbol, "1d")
-    return {"symbol": symbol, "stockPrice": stock_data["Close"][len(stock_data["Close"])-1], "contracts": contracts}
+    stock_data, extra_info = stock.get_stock_history(symbol, "1d")
+    return {"symbol": symbol, "stockPrice": stock_data["Close"][len(stock_data["Close"])-1],
+            "stockExtraInfo": extra_info, "contracts": contracts}
 
 
 @router.get("/quote-valuation", tags=["quote"], response_model=OptionsChainQuotesValuationResponse)
@@ -107,15 +114,15 @@ async def options_chain_quotes_valuation(request: Request, response: Response, s
     if not symbol:
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
-    stock_price, ewma_his_vol, contracts = \
+    stock_price, extra_info, ewma_his_vol, contracts = \
         option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
                                               last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda, only_otm,
                                               specific_contract, proxy, stock_src, calc_kelly_iv, iteration)
     if contracts is None or len(contracts) == 0:
         return {"symbol": symbol, "contracts": []}
 
-    return {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
-            "contracts": contracts}
+    return {"symbol": symbol, "stockPrice": stock_price, "stockExtraInfo": extra_info,
+            "EWMA_historicalVolatility": ewma_his_vol, "contracts": contracts}
 
 
 @ws.websocket("/option/quote-valuation")
@@ -141,7 +148,7 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             threading.Thread.__init__(self)
 
         def run(self):
-            stock_price, ewma_his_vol, contracts = \
+            stock_price, extra_info, ewma_his_vol, contracts = \
                 option.options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_volume, min_price,
                                                       last_trade_days, ewma_his_vol_period, ewma_his_vol_lambda,
                                                       only_otm, specific_contract, proxy, stock_src, calc_kelly_iv,
@@ -149,8 +156,8 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             if contracts is None or len(contracts) == 0:
                 self.output = {"symbol": symbol, "contracts": []}
             else:
-                self.output = {"symbol": symbol, "stockPrice": stock_price, "EWMA_historicalVolatility": ewma_his_vol,
-                               "contracts": contracts}
+                self.output = {"symbol": symbol, "stockPrice": stock_price, "stockExtraInfo": extra_info,
+                               "EWMA_historicalVolatility": ewma_his_vol, "contracts": contracts}
 
     await websocket.accept()
     t = RunThread()

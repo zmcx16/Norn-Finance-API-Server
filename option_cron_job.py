@@ -5,7 +5,6 @@ import pathlib
 import json
 import logging
 import traceback
-import requests
 import argparse
 import threading
 import queue
@@ -13,6 +12,8 @@ from fastapi.testclient import TestClient
 from urllib.parse import urlencode
 
 from main import app
+from models.stock import get_ex_dividend_list
+from utils import web
 
 
 afscreener_url = os.environ.get(
@@ -40,17 +41,6 @@ output_args_list = [
 ]
 
 
-def send_request(url):
-    try:
-        res = requests.get(url)
-        res.raise_for_status()
-    except Exception as ex:
-        logging.error(traceback.format_exc())
-        return -1, ex
-
-    return 0, res.text
-
-
 def get_stock_info():
     try:
         param = {
@@ -59,7 +49,7 @@ def get_stock_info():
         }
         encoded_args = urlencode(param)
         query_url = afscreener_url + '?' + encoded_args
-        ret, content = send_request(query_url)
+        ret, content = web.send_request(query_url)
         if ret == 0:
             resp = json.loads(content)
             if resp["ret"] == 0:
@@ -199,6 +189,12 @@ if __name__ == "__main__":
             stock_info = args.input.split(",")
 
         logging.info(stock_info)
+
+        ex_dividend_date_list = get_ex_dividend_list()
+        logging.info(ex_dividend_date_list)
+        with open(output_folder / 'ex_dividend_date_list.json', 'w', encoding='utf-8') as f:
+            f.write(json.dumps(ex_dividend_date_list, separators=(',', ':')))
+
         FinanceAPIThread.reset_index(len(stock_info))
 
         for symbol in stock_info:
@@ -242,7 +238,12 @@ if __name__ == "__main__":
         discount_threshold = output_arg["discount_threshold"]
 
         for d in output_data:
-            t = {"symbol": d["symbol"], "stockPrice": d["stockPrice"],
+
+            extra_info = {}
+            if "stockExtraInfo" in d:
+                extra_info = d["stockExtraInfo"]
+
+            t = {"symbol": d["symbol"], "stockPrice": d["stockPrice"], "stockExtraInfo": extra_info,
                  "EWMA_historicalVolatility": d["EWMA_historicalVolatility"], "contracts": []}
             for contract in d["contracts"]:
                 c = {"expiryDate": contract["expiryDate"], "calls": [], "puts": []}
