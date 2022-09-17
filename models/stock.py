@@ -150,7 +150,7 @@ def get_ex_dividend_list():
     output = {'data': []}
     max_page = 100
 
-    for p in range(50, max_page):
+    for p in range(1, max_page):
         payload = '{"uuid":"Merged-SEOTable","default_filters":[{"filterKey":"ShareClass","value":["Commons"],"filterType":"FilterShareClass","filterCollection":["CollectionMergedStocks"],"esType":"keyword"}],"tab":"TblTabDivMergedExDiv",' \
                   '"page":' + str(p) +\
             ',"collection":"CollectionMergedStocks","sort_by":{"PayoutNextExDate":"asc"},"theme":"FIN::L1(Dividend Income)","modal_key":null,"modal_keyword":null,"special_theme":"EX_DATE_YEAR_FROM_NOW","ad_unit_full_path":"/2143012/Div/Theme/ExDate","no_content_tray_ads_in_table":false}'
