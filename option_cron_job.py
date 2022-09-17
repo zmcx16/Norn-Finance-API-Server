@@ -182,6 +182,11 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=args.log_level)
 
+    ex_dividend_date_list = get_ex_dividend_list()
+    logging.info(ex_dividend_date_list)
+    with open(output_folder / 'ex_dividend_date_list.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(ex_dividend_date_list, separators=(',', ':')))
+
     if args.specific_contract == "":
         if args.input == "":
             stock_info = get_stock_info()
@@ -189,12 +194,6 @@ if __name__ == "__main__":
             stock_info = args.input.split(",")
 
         logging.info(stock_info)
-
-        ex_dividend_date_list = get_ex_dividend_list()
-        logging.info(ex_dividend_date_list)
-        with open(output_folder / 'ex_dividend_date_list.json', 'w', encoding='utf-8') as f:
-            f.write(json.dumps(ex_dividend_date_list, separators=(',', ':')))
-
         FinanceAPIThread.reset_index(len(stock_info))
 
         for symbol in stock_info:
