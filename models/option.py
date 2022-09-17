@@ -244,7 +244,7 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
     contracts = get_option_chain(symbol, min_next_days, max_next_days, min_volume, min_price, last_trade_days,
                                  specific_contract, proxy)
     if len(contracts) == 0:
-        return None, None, None
+        return None, None, None, None
 
     stock_data, extra_info = stock.get_stock_history(symbol, "1y", proxy, stock_src)
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
