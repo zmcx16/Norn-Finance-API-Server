@@ -205,6 +205,9 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, calc_kelly_t
                                  kind * ((strike + kind * last_price) - expiry_predict_prices), 0)
             fixed_list = np.where(kind * expiry_predict_prices <= kind * strike, last_price, 0)
 
+            call_put["valuationData"]["exerciseProbability"] = \
+                (np.count_nonzero(expiry_predict_prices) - np.count_nonzero(fixed_list)) * 1.0 / np.count_nonzero(expiry_predict_prices)
+
             def calc(buy_sell, gain_list, loss_list):
                 gain_all = sum(gain_list)
                 loss_all = sum(loss_list)

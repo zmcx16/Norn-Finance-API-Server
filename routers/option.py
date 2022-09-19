@@ -20,6 +20,7 @@ class ValuationData(BaseModel):
     KellyCriterion_MU_0_buy: float
     KellyCriterion_IV_buy: Optional[float]
     KellyCriterion_IV_sell: Optional[float]
+    exerciseProbability: Optional[float]
     delta: float
     gamma: float
     vega: float
