@@ -66,6 +66,8 @@ def get_stock_info():
         except Exception:
             logging.error('Generated an exception: {ex}, try next target.'.format(ex=traceback.format_exc()))
 
+        time.sleep(DELAY_TIME_SEC)
+
     sys.exit(1)
 
 
