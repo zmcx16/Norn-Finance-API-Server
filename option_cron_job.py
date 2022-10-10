@@ -20,6 +20,7 @@ afscreener_url = os.environ.get(
     "AF_URL", "")
 afscreener_token = os.environ.get("AF_TOKEN", "")
 
+RETRY_CNT = 5
 DELAY_TIME_SEC = 0.8
 THREAD_CNT = 1
 
@@ -42,25 +43,28 @@ output_args_list = [
 
 
 def get_stock_info():
-    try:
-        param = {
-            'code': afscreener_token,
-            'api': 'get-stock-info-from-db'
-        }
-        encoded_args = urlencode(param)
-        query_url = afscreener_url + '?' + encoded_args
-        ret, content = web.send_request(query_url)
-        if ret == 0:
-            resp = json.loads(content)
-            if resp["ret"] == 0:
-                return resp["data"]
-            else:
-                logging.error('server err = {err}, msg = {msg}'.format(err=resp["ret"], msg=resp["err_msg"]))
-        else:
-            logging.error('send_request failed: {ret}'.format(ret=ret))
 
-    except Exception:
-        logging.error(traceback.format_exc())
+    param = {
+        'code': afscreener_token,
+        'api': 'get-stock-info-from-db'
+    }
+    encoded_args = urlencode(param)
+    query_url = afscreener_url + '?' + encoded_args
+
+    for retry_i in range(RETRY_CNT):
+        try:
+            ret, content = web.send_request(query_url)
+            if ret == 0:
+                resp = json.loads(content)
+                if resp["ret"] == 0:
+                    return resp["data"]
+                else:
+                    logging.error('server err = {err}, msg = {msg}'.format(err=resp["ret"], msg=resp["err_msg"]))
+            else:
+                logging.error('send_request failed: {ret}'.format(ret=ret))
+
+        except Exception:
+            logging.error('Generated an exception: {ex}, try next target.'.format(ex=traceback.format_exc()))
 
     sys.exit(1)
 
