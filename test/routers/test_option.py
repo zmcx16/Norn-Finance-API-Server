@@ -17,7 +17,7 @@ def test_options_chain_quotes():
 
 def test_options_chain_quotes_valuation():
     # "/option/quote-valuation?symbol=T&ewma_his_vol_lambda=0.94&only_otm=false&specific_contract=call_2022-04-08_24"
-    response = client.get("/option/quote-valuation?symbol=ZIM&ewma_his_vol_lambda=0.94&only_otm=true&"
+    response = client.get("/option/quote-valuation?symbol=NKE&ewma_his_vol_lambda=0.94&only_otm=true&"
                           "calc_kelly_iv=true&iteration=100000")
     assert response.status_code == 200
     output = response.json()

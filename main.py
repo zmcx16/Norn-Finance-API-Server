@@ -43,7 +43,8 @@ app.mount("/ws", option.ws)
 
 
 @app.get("/")
-@limiter.app_limiter.limit("2/minute")
+@app.get("/livez")
+@limiter.app_limiter.limit("60/minute")
 async def hello_norn(request: Request, response: Response):
     return {"msg": "Hello Norn"}
 
