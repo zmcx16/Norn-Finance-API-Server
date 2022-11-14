@@ -2,7 +2,7 @@ yfinance>=0.1.74
 beautifulsoup4>=4.11.1
 html5lib>=1.1
 pydantic>=1.8.2
-fastapi>=0.70.0
+fastapi==0.86.0
 gunicorn>=20.1.0
 uvicorn[standard]>=0.16.0
 pytest>=6.2.5
