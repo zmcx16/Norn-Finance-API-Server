@@ -169,6 +169,15 @@ if __name__ == "__main__":
             logging.info(f'no need update {symbol}')
             continue
 
+        output["data"][symbol] = {
+            "socialScore": "-",
+            "governanceScore": "-",
+            "environmentScore": "-",
+            "percentile": "-",
+            "totalEsg": "-",
+            "last_update_time": int(datetime.now().timestamp()),
+        }
+
         data = get_stock_data(symbol)
 
         stores = data['context']['dispatcher']['stores']
@@ -177,25 +186,21 @@ if __name__ == "__main__":
             break
 
         d = stores["QuoteSummaryStore"]["esgScores"]
+
         if len(d) > 0:
-            output["data"][symbol] = {
-                "socialScore": d["socialScore"]["raw"],
-                "governanceScore": d["governanceScore"]["raw"],
-                "environmentScore": d["environmentScore"]["raw"],
-                "percentile": d["percentile"]["raw"],
-                "totalEsg": d["totalEsg"]["raw"],
-                "last_update_time": int(datetime.now().timestamp()),
-            }
+            if "socialScore" in d and "raw" in d["socialScore"]:
+                output["data"][symbol]["socialScore"] = d["socialScore"]["raw"]
+            if "governanceScore" in d and "raw" in d["governanceScore"]:
+                output["data"][symbol]["governanceScore"] = d["governanceScore"]["raw"]
+            if "environmentScore" in d and "raw" in d["environmentScore"]:
+                output["data"][symbol]["environmentScore"] = d["environmentScore"]["raw"]
+            if "percentile" in d and "raw" in d["percentile"]:
+                output["data"][symbol]["percentile"] = d["percentile"]["raw"]
+            if "totalEsg" in d and "raw" in d["totalEsg"]:
+                output["data"][symbol]["totalEsg"] = d["totalEsg"]["raw"]
+
         else:
             logging.info(f'no ESG update {symbol}')
-            output["data"][symbol] = {
-                "socialScore": "-",
-                "governanceScore": "-",
-                "environmentScore": "-",
-                "percentile": "-",
-                "totalEsg": "-",
-                "last_update_time": int(datetime.now().timestamp()),
-            }
 
         if len(output["data"]) >= BATCH_UPDATE:
             update_db(output)
