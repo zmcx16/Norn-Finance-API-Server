@@ -14,11 +14,11 @@ afscreener_url = os.environ.get(
 afscreener_token = os.environ.get("AF_TOKEN", "")
 
 
-DELAY_TIME_SEC = 30
+DELAY_TIME_SEC = 10
 RETRY_SEND_REQUEST = 3
 RETRY_FAILED_DELAY = 60
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
-
+BATCH_UPDATE = 20
 
 def send_request(url, retry):
     for r in range(retry):
@@ -75,6 +75,33 @@ def get_stock_data(symbol):
         exit(-1)
 
     return root_app_main
+
+
+def update_db(output):
+    logging.info(f'update to db, output = {output}')
+    if len(output["data"]) > 0:
+        # update data to server
+        param = {
+            'code': afscreener_token,
+            'api': 'update-esg-data'
+        }
+        encoded_args = urlencode(param)
+        query_url = afscreener_url + '?' + encoded_args
+
+        ret, resp = send_post_json(query_url, RETRY_SEND_REQUEST, json.dumps(output))
+        if ret == 0:
+            try:
+                resp_json = json.loads(resp)
+                if resp_json["ret"] != 0:
+                    logging.error('server err = {err}, msg = {msg}'.format(err=resp_json["ret"], msg=resp_json["err_msg"]))
+                    sys.exit(1)
+            except Exception as ex:
+                logging.error(traceback.format_exc())
+        else:
+            logging.error('send_post_json failed: {ret}'.format(ret=ret))
+            sys.exit(1)
+
+    output["data"] = {}
 
 
 if __name__ == "__main__":
@@ -136,7 +163,7 @@ if __name__ == "__main__":
     output = {"data": {}}
     for s_i in range(len(symbol_list)):
         symbol = symbol_list[s_i]
-        logging.info(f'[{s_i+1} / {len(symbol_list)}] get {symbol} data')
+        logging.info(f'[{s_i+1} / {len(symbol_list)}] get {symbol} data [Updated: {len(output["data"])}]')
 
         if symbol in current_esg_data and now - UPDATE_INTERVAL < current_esg_data[symbol]["last_update_time"]:
             logging.info(f'no need update {symbol}')
@@ -162,30 +189,11 @@ if __name__ == "__main__":
         else:
             logging.info(f'no ESG update {symbol}')
 
+        if len(output["data"]) >= BATCH_UPDATE:
+            update_db(output)
+
         time.sleep(DELAY_TIME_SEC)
 
-    logging.info(f'output = {output}')
-
-    if len(output["data"]) > 0:
-        # update data to server
-        param = {
-            'code': afscreener_token,
-            'api': 'update-esg-data'
-        }
-        encoded_args = urlencode(param)
-        query_url = afscreener_url + '?' + encoded_args
-
-        ret, resp = send_post_json(query_url, RETRY_SEND_REQUEST, json.dumps(output))
-        if ret == 0:
-            try:
-                resp_json = json.loads(resp)
-                if resp_json["ret"] != 0:
-                    logging.error('server err = {err}, msg = {msg}'.format(err=resp_json["ret"], msg=resp_json["err_msg"]))
-                    sys.exit(1)
-            except Exception as ex:
-                logging.error(traceback.format_exc())
-        else:
-            logging.error('send_post_json failed: {ret}'.format(ret=ret))
-            sys.exit(1)
+    update_db(output)
 
     logging.info('all task done')
