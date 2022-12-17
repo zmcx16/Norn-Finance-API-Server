@@ -188,17 +188,16 @@ if __name__ == "__main__":
         d = stores["QuoteSummaryStore"]["esgScores"]
 
         if len(d) > 0:
-            if "socialScore" in d and "raw" in d["socialScore"]:
+            if "socialScore" in d and d["socialScore"] and "raw" in d["socialScore"]:
                 output["data"][symbol]["socialScore"] = d["socialScore"]["raw"]
-            if "governanceScore" in d and "raw" in d["governanceScore"]:
+            if "governanceScore" in d and d["governanceScore"] and "raw" in d["governanceScore"]:
                 output["data"][symbol]["governanceScore"] = d["governanceScore"]["raw"]
-            if "environmentScore" in d and "raw" in d["environmentScore"]:
+            if "environmentScore" in d and d["environmentScore"] and "raw" in d["environmentScore"]:
                 output["data"][symbol]["environmentScore"] = d["environmentScore"]["raw"]
-            if "percentile" in d and "raw" in d["percentile"]:
+            if "percentile" in d and d["percentile"] and "raw" in d["percentile"]:
                 output["data"][symbol]["percentile"] = d["percentile"]["raw"]
-            if "totalEsg" in d and "raw" in d["totalEsg"]:
+            if "totalEsg" in d and d["totalEsg"] and "raw" in d["totalEsg"]:
                 output["data"][symbol]["totalEsg"] = d["totalEsg"]["raw"]
-
         else:
             logging.info(f'no ESG update {symbol}')
 
