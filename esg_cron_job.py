@@ -18,7 +18,7 @@ DELAY_TIME_SEC = 10
 RETRY_SEND_REQUEST = 3
 RETRY_FAILED_DELAY = 60
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
-BATCH_UPDATE = 20
+BATCH_UPDATE = 50
 
 def send_request(url, retry):
     for r in range(retry):
@@ -188,6 +188,14 @@ if __name__ == "__main__":
             }
         else:
             logging.info(f'no ESG update {symbol}')
+            output["data"][symbol] = {
+                "socialScore": "-",
+                "governanceScore": "-",
+                "environmentScore": "-",
+                "percentile": "-",
+                "totalEsg": "-",
+                "last_update_time": int(datetime.now().timestamp()),
+            }
 
         if len(output["data"]) >= BATCH_UPDATE:
             update_db(output)
