@@ -29,7 +29,6 @@ def send_request(url, retry):
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
-            continue
         
         if res.status_code == 200:
             return 0, res.text
@@ -48,7 +47,6 @@ def send_post_json(url, retry, req_data):
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
-            continue
 
         if res.status_code == 200:
             return 0, res.text
@@ -92,7 +90,7 @@ if __name__ == "__main__":
         'api': 'query-stock-list'
     }
     encoded_args = urlencode(param)
-    query_url = afscreener_url + "/api/RunScreenerTask" + '?' + encoded_args
+    query_url = afscreener_url + '?' + encoded_args
 
     ret, resp = send_request(query_url, RETRY_SEND_REQUEST)
     if ret == 0:
@@ -117,7 +115,7 @@ if __name__ == "__main__":
         'api': 'get-esg-data'
     }
     encoded_args = urlencode(param)
-    query_url = afscreener_url + "/api/RunScreenerTask" + '?' + encoded_args
+    query_url = afscreener_url + '?' + encoded_args
 
     ret, resp = send_request(query_url, RETRY_SEND_REQUEST)
     if ret == 0:
@@ -175,7 +173,7 @@ if __name__ == "__main__":
             'api': 'update-esg-data'
         }
         encoded_args = urlencode(param)
-        query_url = afscreener_url + "/api/RunScreenerTask" + '?' + encoded_args
+        query_url = afscreener_url + '?' + encoded_args
 
         ret, resp = send_post_json(query_url, RETRY_SEND_REQUEST, json.dumps(output))
         if ret == 0:
