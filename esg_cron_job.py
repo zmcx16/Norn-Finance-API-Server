@@ -14,8 +14,9 @@ afscreener_url = os.environ.get(
 afscreener_token = os.environ.get("AF_TOKEN", "")
 
 
-DELAY_TIME_SEC = 10
-RETRY_SEND_REQUEST = 1
+DELAY_TIME_SEC = 30
+RETRY_SEND_REQUEST = 3
+RETRY_FAILED_DELAY = 60
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
 
 
@@ -33,7 +34,7 @@ def send_request(url, retry):
         if res.status_code == 200:
             return 0, res.text
         
-        time.sleep(DELAY_TIME_SEC)
+        time.sleep(RETRY_FAILED_DELAY)
 
     return -2, "exceed retry cnt"
 
@@ -52,7 +53,7 @@ def send_post_json(url, retry, req_data):
         if res.status_code == 200:
             return 0, res.text
 
-        time.sleep(DELAY_TIME_SEC)
+        time.sleep(RETRY_FAILED_DELAY)
 
     return -2, "exceed retry cnt"
 
