@@ -15,7 +15,7 @@ afscreener_token = os.environ.get("AF_TOKEN", "")
 
 
 DELAY_TIME_SEC = 10
-RETRY_SEND_REQUEST = 2
+RETRY_SEND_REQUEST = 1
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
 
 
@@ -80,7 +80,7 @@ def get_stock_data(symbol):
 
 if __name__ == "__main__":
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     now = datetime.now().timestamp()
 

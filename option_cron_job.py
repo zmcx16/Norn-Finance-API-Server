@@ -181,7 +181,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "-input-symbol-list", dest="input", default="")
     parser.add_argument("-s", "-specific-contract", dest="specific_contract", default="")
-    parser.add_argument("-l", "-log-level", dest="log_level", default="DEBUG")
+    parser.add_argument("-l", "-log-level", dest="log_level", default="INFO")
     parser.add_argument("-d", "-data-source", dest="data_source", default="marketwatch")
     parser.add_argument("-c", "-calc-kelly-iv", dest="calc_kelly_iv", action="store_true")
     args = parser.parse_args()
