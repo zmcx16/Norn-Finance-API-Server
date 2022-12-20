@@ -91,7 +91,7 @@ def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
         else:
             ticker = yf.Ticker(symbol)
             extra_info["earningsDate"] = ""
-            if ticker.calendar:
+            if ticker.calendar is not None:
                 extra_info["earningsDate"] = ' - '.join(ticker.calendar.iloc[0].astype(str).array)
             return ticker.history(period=period, proxy=proxy), extra_info
 

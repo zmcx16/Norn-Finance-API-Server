@@ -1,4 +1,4 @@
-yfinance==0.1.74
+yfinance>=0.2.3
 beautifulsoup4==4.11.1
 html5lib==1.1
 pydantic==1.8.2
