@@ -13,7 +13,7 @@ def test_get_stock():
     print(output.dividends)
     print("***********************")
     print("****** calendar *******")
-    # print(output.calendar)
+    print(output.calendar)
     print("***********************")
     # print("*** earnings_dates ****")
     # print(output.earnings_dates)
