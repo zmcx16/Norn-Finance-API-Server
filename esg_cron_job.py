@@ -231,8 +231,6 @@ if __name__ == "__main__":
         if len(output["data"]) >= BATCH_UPDATE:
             update_db(output)
 
-        time.sleep(DELAY_TIME_SEC)
-
     update_db(output)
 
     logging.info('all task done')
