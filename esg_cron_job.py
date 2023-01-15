@@ -86,7 +86,11 @@ def get_stock_data_by_browser(symbol, retry):
             driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
             time.sleep(DELAY_TIME_SEC)
             root_app_main = driver.execute_script("return App.main")
-            return root_app_main
+            stores = root_app_main['context']['dispatcher']['stores']
+            if "QuoteSummaryStore" not in stores:
+                logging.warning('may occur encrypted data, retry it')
+            else:
+                return root_app_main
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
