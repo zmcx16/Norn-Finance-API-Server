@@ -7,6 +7,9 @@ import requests
 import traceback
 from datetime import datetime
 from urllib.parse import urlencode
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
 
 
 afscreener_url = os.environ.get(
@@ -77,6 +80,12 @@ def get_stock_data(symbol):
     return root_app_main
 
 
+def get_stock_data_by_browser(symbol):
+    driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
+    root_app_main = driver.execute_script("return App.main")
+    return root_app_main
+
+
 def update_db(output):
     logging.info(f'update to db, output = {output}')
     if len(output["data"]) > 0:
@@ -105,6 +114,10 @@ def update_db(output):
 
 
 if __name__ == "__main__":
+
+    options = webdriver.FirefoxOptions()
+    options.headless = True
+    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
 
     logging.basicConfig(level=logging.INFO)
 
@@ -178,7 +191,7 @@ if __name__ == "__main__":
             "last_update_time": int(datetime.now().timestamp()),
         }
 
-        data = get_stock_data(symbol)
+        data = get_stock_data_by_browser(symbol)
 
         stores = data['context']['dispatcher']['stores']
         if "QuoteSummaryStore" not in stores:
