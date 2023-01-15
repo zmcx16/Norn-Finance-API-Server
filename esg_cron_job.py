@@ -80,10 +80,20 @@ def get_stock_data(symbol):
     return root_app_main
 
 
-def get_stock_data_by_browser(symbol):
-    driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
-    root_app_main = driver.execute_script("return App.main")
-    return root_app_main
+def get_stock_data_by_browser(symbol, retry):
+    for r in range(retry):
+        try:
+            driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
+            time.sleep(DELAY_TIME_SEC)
+            root_app_main = driver.execute_script("return App.main")
+            return root_app_main
+        except Exception as ex:
+            logging.error(traceback.format_exc())
+            logging.info(f'retry = {r}')
+
+        time.sleep(RETRY_FAILED_DELAY)
+
+    return -2, "exceed retry cnt"
 
 
 def update_db(output):
@@ -191,7 +201,7 @@ if __name__ == "__main__":
             "last_update_time": int(datetime.now().timestamp()),
         }
 
-        data = get_stock_data_by_browser(symbol)
+        data = get_stock_data_by_browser(symbol, RETRY_SEND_REQUEST)
 
         stores = data['context']['dispatcher']['stores']
         if "QuoteSummaryStore" not in stores:
