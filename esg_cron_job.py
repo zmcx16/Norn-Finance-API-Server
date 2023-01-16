@@ -18,7 +18,7 @@ afscreener_token = os.environ.get("AF_TOKEN", "")
 
 
 DELAY_TIME_SEC = 10
-RETRY_SEND_REQUEST = 3
+RETRY_SEND_REQUEST = 5
 RETRY_FAILED_DELAY = 60
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
 BATCH_UPDATE = 10
@@ -95,7 +95,7 @@ def get_stock_data_by_browser(symbol, retry):
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
 
-        time.sleep(RETRY_FAILED_DELAY)
+        time.sleep(RETRY_FAILED_DELAY * r)
 
     sys.exit(1)
 
