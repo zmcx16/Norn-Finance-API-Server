@@ -88,7 +88,10 @@ def get_stock_data_by_browser(symbol, retry):
             root_app_main = driver.execute_script("return App.main")
             stores = root_app_main['context']['dispatcher']['stores']
             if "QuoteSummaryStore" not in stores:
-                logging.warning('may occur encrypted data, retry it')
+                if "PageStore" in stores: # yahoo can't find the symbol
+                    return None
+                else:
+                    logging.warning('may occur encrypted data, retry it')
             else:
                 return root_app_main
         except Exception as ex:
@@ -206,6 +209,8 @@ if __name__ == "__main__":
         }
 
         data = get_stock_data_by_browser(symbol, RETRY_SEND_REQUEST)
+        if data is None:
+            continue
 
         stores = data['context']['dispatcher']['stores']
         if "QuoteSummaryStore" not in stores:
