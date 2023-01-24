@@ -85,8 +85,8 @@ def get_stock_data_by_browser(symbol, retry):
         try:
             driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
             time.sleep(DELAY_TIME_SEC)
-            if "finance.yahoo.com" not in driver.getCurrentUrl():
-                logging.warning('auto redirect to ' + driver.getCurrentUrl() + ', skip it')
+            if "finance.yahoo.com" not in driver.current_url:
+                logging.warning('auto redirect to ' + driver.current_url + ', skip it')
                 return None
             root_app_main = driver.execute_script("return App.main")
             stores = root_app_main['context']['dispatcher']['stores']
