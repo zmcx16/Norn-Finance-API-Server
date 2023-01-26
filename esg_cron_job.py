@@ -85,10 +85,14 @@ def get_stock_data_by_browser(symbol, retry):
         try:
             driver.get("https://hk.finance.yahoo.com/quote/" + symbol + "?p=" + symbol)
             time.sleep(DELAY_TIME_SEC)
+            if "err=404" in driver.current_url:
+                logging.warning('auto redirect to ' + driver.current_url + ', skip it')
+                return None
             root_app_main = driver.execute_script("return App.main")
             stores = root_app_main['context']['dispatcher']['stores']
             if "QuoteSummaryStore" not in stores:
                 if "PageStore" in stores: # yahoo can't find the symbol
+                    logging.warning("yahoo can't find the symbol")
                     return None
                 else:
                     logging.warning('may occur encrypted data, retry it')
