@@ -1,4 +1,4 @@
-name: SyncESGData
+name: SyncFinanceData
 
 on:
   workflow_dispatch:
@@ -29,10 +29,10 @@ jobs:
         apt list --installed
     - name: Install Python dependencies
       run: |-
-        python -m pip install -r ./requirements-esg_cron_job.txt
-    - name: Run sync ESG data
+        python -m pip install -r ./requirements-yahoo_finance_cron_job.txt
+    - name: Run sync Finance data
       env:
         AF_URL: ${{ secrets.AF_URL }}
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
       run: |-
-        python ./esg_cron_job.py
+        python ./yahoo_finance_cron_job.py.py
