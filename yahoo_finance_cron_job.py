@@ -235,6 +235,7 @@ if __name__ == "__main__":
         if not recommendation_latest:
             d = stores["QuoteSummaryStore"]["financialData"]
             output_recommendation["data"][symbol] = {
+                "recommendationKey": "-",
                 "recommendationMean": "-",
                 "last_update_time": int(datetime.now().timestamp()),
             }
@@ -242,6 +243,8 @@ if __name__ == "__main__":
             if len(d) > 0:
                 if "recommendationMean" in d and d["recommendationMean"] and "raw" in d["recommendationMean"]:
                     output_recommendation["data"][symbol]["recommendationMean"] = d["recommendationMean"]["raw"]
+                if "recommendationKey" in d and d["recommendationKey"]:
+                    output_recommendation["data"][symbol]["recommendationKey"] = d["recommendationKey"]
             else:
                 logging.info(f'{symbol} no recommendation update')
 
