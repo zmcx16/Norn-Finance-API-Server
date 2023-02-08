@@ -35,4 +35,4 @@ jobs:
         AF_URL: ${{ secrets.AF_URL }}
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
       run: |-
-        python ./yahoo_finance_cron_job.py.py
+        python ./yahoo_finance_cron_job.py
