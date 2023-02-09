@@ -233,14 +233,13 @@ if __name__ == "__main__":
 
         # parse recommendation data
         if not recommendation_latest:
-            d = stores["QuoteSummaryStore"]["financialData"]
             output_recommendation["data"][symbol] = {
                 "recommendationKey": "-",
                 "recommendationMean": "-",
                 "last_update_time": int(datetime.now().timestamp()),
             }
-
-            if len(d) > 0:
+            if "financialData" in stores["QuoteSummaryStore"] and len(stores["QuoteSummaryStore"]["financialData"]) > 0:
+                d = stores["QuoteSummaryStore"]["financialData"]
                 if "recommendationMean" in d and d["recommendationMean"] and "raw" in d["recommendationMean"]:
                     output_recommendation["data"][symbol]["recommendationMean"] = d["recommendationMean"]["raw"]
                 if "recommendationKey" in d and d["recommendationKey"]:
