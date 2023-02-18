@@ -17,7 +17,7 @@ afscreener_token = os.environ.get("AF_TOKEN", "")
 
 
 DELAY_TIME_SEC = 10
-RETRY_SEND_REQUEST = 7
+RETRY_SEND_REQUEST = 10
 RETRY_FAILED_DELAY = 80
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
 BATCH_UPDATE = 10
