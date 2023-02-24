@@ -76,13 +76,14 @@ class FinanceAPIThread(threading.Thread):
     current_index = 0
     total_cnt = 0
 
-    def __init__(self, id, task_queue, data_source, calc_kelly_iv):
+    def __init__(self, id, task_queue, data_source, calc_kelly_iv, max_next_days):
         threading.Thread.__init__(self)
         self.id = id
         self.task_queue = task_queue
         self.output = []
         self.data_source = data_source
         self.calc_kelly_iv = calc_kelly_iv
+        self.max_next_days = max_next_days
 
     def run(self):
         logging.info("Thread " + str(self.id) + "start")
@@ -96,7 +97,7 @@ class FinanceAPIThread(threading.Thread):
                     total_cnt=FinanceAPIThread.total_cnt, symbol=symbol))
 
                 resp = FinanceAPIThread.__get_option_valuation(symbol, specific_contract_args, self.data_source,
-                                                               self.calc_kelly_iv)
+                                                               self.calc_kelly_iv, self.max_next_days)
                 if resp is None:
                     logging.error("get {symbol} failed".format(symbol=symbol))
                 elif len(resp['contracts']) == 0:
@@ -126,15 +127,16 @@ class FinanceAPIThread(threading.Thread):
         api_thread_lock.release()
 
     @staticmethod
-    def __get_option_valuation(symbol, specific_contract_args, data_source, calc_kelly_iv):
+    def __get_option_valuation(symbol, specific_contract_args, data_source, calc_kelly_iv, max_next_days):
         try:
             if specific_contract_args != "":
                 api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
                       "&stock_src=" + data_source + "&specific_contract=" + specific_contract_args + \
-                      "&max_next_days=252&min_volume=0&last_trade_days=252"
+                      "&max_next_days=" + max_next_days + "&min_volume=0&last_trade_days=252"
             else:
                 api = "/option/quote-valuation?symbol=" + symbol + "&ewma_his_vol_lambda=0.94" + \
-                      "&stock_src=" + data_source + "&min_price=" + str(min_price) + "&only_otm=true"
+                      "&stock_src=" + data_source + "&min_price=" + str(min_price) + "&only_otm=true" + \
+                      "&max_next_days=" + max_next_days
 
             if calc_kelly_iv:
                 api += "&calc_kelly_iv=true"
@@ -184,6 +186,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "-log-level", dest="log_level", default="INFO")
     parser.add_argument("-d", "-data-source", dest="data_source", default="marketwatch")
     parser.add_argument("-c", "-calc-kelly-iv", dest="calc_kelly_iv", action="store_true")
+    parser.add_argument("-m", "-max-next-days", dest="max_next_days", default="40")
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
@@ -217,7 +220,7 @@ if __name__ == "__main__":
 
     work_list = []
     for index in range(THREAD_CNT):
-        work_list.append(FinanceAPIThread(index, task_queue, args.data_source, args.calc_kelly_iv))
+        work_list.append(FinanceAPIThread(index, task_queue, args.data_source, args.calc_kelly_iv, args.max_next_days))
         work_list[index].start()
 
     for worker in work_list:
