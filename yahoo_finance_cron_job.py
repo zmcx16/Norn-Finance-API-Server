@@ -180,16 +180,20 @@ if __name__ == "__main__":
     current_esg_data = get_af_common_data('get-esg-data', RETRY_SEND_REQUEST)
     # get recommendation data
     current_recommendation_data = get_af_common_data('get-recommendation-data', RETRY_SEND_REQUEST)
+    # get recommendation data
+    current_eps_data = get_af_common_data('get-eps-analysis-data', RETRY_SEND_REQUEST)
 
     output_esg = {"data": {}}
     output_recommendation = {"data": {}}
+    output_eps = {"data": {}}
     for s_i in range(len(symbol_list)):
         symbol = symbol_list[s_i]
-        logging.info(f'[{s_i+1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])})]')
+        logging.info(f'[{s_i+1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})]')
 
         esg_latest = symbol in current_esg_data and now - UPDATE_INTERVAL < current_esg_data[symbol]["last_update_time"]
         recommendation_latest = symbol in current_recommendation_data and now - UPDATE_INTERVAL < current_recommendation_data[symbol]["last_update_time"]
-        if esg_latest and recommendation_latest:
+        eps_latest = symbol in current_eps_data and now - UPDATE_INTERVAL < current_eps_data[symbol]["last_update_time"]
+        if esg_latest and recommendation_latest and eps_latest:
             logging.info(f'no need update {symbol}')
             continue
 
@@ -250,8 +254,38 @@ if __name__ == "__main__":
             if len(output_recommendation["data"]) >= BATCH_UPDATE:
                 update_db(output_recommendation, 'update-recommendation-data')
 
+        # parse earning data
+        if not eps_latest:
+            output_eps["data"][symbol] = {
+                "quarterly": {},
+                "last_update_time": int(datetime.now().timestamp()),
+            }
+            if "earnings" in stores["QuoteSummaryStore"] and \
+                "earningsChart" in stores["QuoteSummaryStore"]["earnings"] and \
+                "quarterly" in stores["QuoteSummaryStore"]["earnings"]["earningsChart"] and \
+                    len(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]) > 0:
+                for d in reversed(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]):
+                    if "date" in d and d["date"]:
+                        estimate = "-"
+                        if "estimate" in d and d["estimate"] and "raw" in d["estimate"]:
+                            estimate = d["estimate"]["raw"]
+                        actual = "-"
+                        if "actual" in d and d["actual"] and "raw" in d["actual"]:
+                            actual = d["actual"]["raw"]
+
+                        output_eps["data"][symbol]["quarterly"][d["date"]] = {
+                            "actual": actual,
+                            "estimate": estimate,
+                        }
+            else:
+                logging.info(f'{symbol} no eps data')
+
+            if len(output_eps["data"]) >= BATCH_UPDATE:
+                update_db(output_eps, 'update-eps-data')
+
     # final update
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
+    update_db(output_eps, 'update-eps-data')
 
     logging.info('all task done')
