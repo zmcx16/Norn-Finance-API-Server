@@ -299,8 +299,7 @@ def main():
             logging.info('stock ' + symbol + ' is null')
 
         time.sleep(DELAY_TIME_SEC)
-        break
-
+        
     with open(stock_short_folder_path / 'stat.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(stock_short_stat, separators=(',', ':')))
 
