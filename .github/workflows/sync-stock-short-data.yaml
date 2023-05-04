@@ -50,6 +50,7 @@ jobs:
         cp -r ./stock-short ./Norn-StockScreener/norn-data/
         cd ./Norn-StockScreener
         git config --global user.name "zmcx16-bot"
+        git config --global user.email "zmcx16-bot@zmcx16.moe"
         git reset --soft "gh-pages^"
         git add ./norn-data/stock-short/\* && git commit -m "updated stock-short"
         git push -f
