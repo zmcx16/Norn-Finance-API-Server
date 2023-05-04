@@ -66,6 +66,7 @@ jobs:
         cd ./Norn-StockScreener
         mv ./norn-data/output ./norn-data/options
         git config --global user.name "zmcx16-bot"
+        git config --global user.email "zmcx16-bot@zmcx16.moe"
         git reset --soft "gh-pages^"
         git add ./norn-data/options/\* && git commit -m "updated options"
         git push -f
