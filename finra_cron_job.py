@@ -267,7 +267,8 @@ def main():
                 {"Shs Float": base_info_dict[symbol]["Shs Float"],
                  "Short Float": stock_short_history[0]["currentShortPositionQuantity"] / base_info_dict[symbol]["Shs Float"],
                  "Short Ratio": stock_short_history[0]["currentShortPositionQuantity"] / stock_short_history[0]["averageDailyVolumeQuantity"],
-                 "Short Interest": stock_short_history[0]["currentShortPositionQuantity"]}
+                 "Short Interest": stock_short_history[0]["currentShortPositionQuantity"],
+                 "Avg Daily Volume": stock_short_history[0]["averageDailyVolumeQuantity"]}
             append_data = [
                 ["0.5m", 1],
                 ["1m", 2],
