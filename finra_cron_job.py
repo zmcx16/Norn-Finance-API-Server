@@ -288,9 +288,9 @@ def main():
                     sf_pos = stock_short_history[pos]["currentShortPositionQuantity"] / base_info_dict[symbol]["Shs Float"]
                     sr_pos = stock_short_history[pos]["currentShortPositionQuantity"] / stock_short_history[pos]["averageDailyVolumeQuantity"]
                     if sf_0 != 0:
-                        stock_short_stat["data"][symbol]["SF-" + offset] = (sf_0 - sf_pos) / sf_0
+                        stock_short_stat["data"][symbol]["SF-" + offset] = (sf_0 - sf_pos) / sf_pos
                     if sr_0 != 0:
-                        stock_short_stat["data"][symbol]["SR-" + offset] = (sr_0 - sr_pos) / sr_0
+                        stock_short_stat["data"][symbol]["SR-" + offset] = (sr_0 - sr_pos) / sr_pos
 
             with open(stock_short_historical_folder_path / (symbol + '.json'), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(stock_short_history, separators=(',', ':')))
