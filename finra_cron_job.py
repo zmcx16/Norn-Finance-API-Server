@@ -264,7 +264,7 @@ def main():
 
         if stock_short_history and len(stock_short_history) > 0 and base_info_dict[symbol]["Shs Float"] != "-":
             stock_short_stat["data"][symbol] = \
-                {"Close": base_info[0]["Price"], "Shs Float": base_info_dict[symbol]["Shs Float"],
+                {"Shs Float": base_info_dict[symbol]["Shs Float"],
                  "Short Float": stock_short_history[0]["currentShortPositionQuantity"] / base_info_dict[symbol]["Shs Float"],
                  "Short Ratio": stock_short_history[0]["currentShortPositionQuantity"] / stock_short_history[0]["averageDailyVolumeQuantity"],
                  "Short Interest": stock_short_history[0]["currentShortPositionQuantity"]}
