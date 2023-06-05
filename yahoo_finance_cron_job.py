@@ -331,8 +331,6 @@ if __name__ == "__main__":
         if not get_esg_chart():
             break
 
-        break  # test ci
-
     # final update
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
