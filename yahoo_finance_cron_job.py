@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import pathlib
 import time
 import logging
 import requests
@@ -164,6 +165,140 @@ def get_af_common_data(api, retry):
 
     sys.exit(1)
 
+
+def get_quote_summary_store():
+    now = datetime.now().timestamp()
+    logging.info(
+        f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})]')
+
+    esg_latest = symbol in current_esg_data and now - UPDATE_INTERVAL < current_esg_data[symbol]["last_update_time"]
+    recommendation_latest = symbol in current_recommendation_data and now - UPDATE_INTERVAL < \
+                            current_recommendation_data[symbol]["last_update_time"]
+    eps_latest = symbol in current_eps_data and now - UPDATE_INTERVAL < current_eps_data[symbol]["last_update_time"]
+    if esg_latest and recommendation_latest and eps_latest:
+        logging.info(f'no need update {symbol}')
+        return True
+
+    data = get_stock_data_by_browser(symbol, RETRY_SEND_REQUEST)
+    if data is None:
+        return True
+
+    stores = data['context']['dispatcher']['stores']
+    if "QuoteSummaryStore" not in stores:
+        logging.warning('may occur encrypted data, skip going')
+        return False
+
+    # parse esg data
+    if not esg_latest:
+        d = stores["QuoteSummaryStore"]["esgScores"]
+        output_esg["data"][symbol] = {
+            "socialScore": "-",
+            "governanceScore": "-",
+            "environmentScore": "-",
+            "percentile": "-",
+            "totalEsg": "-",
+            "last_update_time": int(datetime.now().timestamp()),
+        }
+
+        if len(d) > 0:
+            if "socialScore" in d and d["socialScore"] and "raw" in d["socialScore"]:
+                output_esg["data"][symbol]["socialScore"] = d["socialScore"]["raw"]
+            if "governanceScore" in d and d["governanceScore"] and "raw" in d["governanceScore"]:
+                output_esg["data"][symbol]["governanceScore"] = d["governanceScore"]["raw"]
+            if "environmentScore" in d and d["environmentScore"] and "raw" in d["environmentScore"]:
+                output_esg["data"][symbol]["environmentScore"] = d["environmentScore"]["raw"]
+            if "percentile" in d and d["percentile"] and "raw" in d["percentile"]:
+                output_esg["data"][symbol]["percentile"] = d["percentile"]["raw"]
+            if "totalEsg" in d and d["totalEsg"] and "raw" in d["totalEsg"]:
+                output_esg["data"][symbol]["totalEsg"] = d["totalEsg"]["raw"]
+        else:
+            logging.info(f'{symbol} no ESG update')
+
+        if len(output_esg["data"]) >= BATCH_UPDATE:
+            update_db(output_esg, 'update-esg-data')
+
+    # parse recommendation data
+    if not recommendation_latest:
+        output_recommendation["data"][symbol] = {
+            "recommendationKey": "-",
+            "recommendationMean": "-",
+            "last_update_time": int(datetime.now().timestamp()),
+        }
+        if "financialData" in stores["QuoteSummaryStore"] and len(stores["QuoteSummaryStore"]["financialData"]) > 0:
+            d = stores["QuoteSummaryStore"]["financialData"]
+            if "recommendationMean" in d and d["recommendationMean"] and "raw" in d["recommendationMean"]:
+                output_recommendation["data"][symbol]["recommendationMean"] = d["recommendationMean"]["raw"]
+            if "recommendationKey" in d and d["recommendationKey"]:
+                output_recommendation["data"][symbol]["recommendationKey"] = d["recommendationKey"]
+        else:
+            logging.info(f'{symbol} no recommendation update')
+
+        if len(output_recommendation["data"]) >= BATCH_UPDATE:
+            update_db(output_recommendation, 'update-recommendation-data')
+
+    # parse earning data
+    if not eps_latest:
+        output_eps["data"][symbol] = {
+            "quarterly": {},
+            "last_update_time": int(datetime.now().timestamp()),
+        }
+        if "earnings" in stores["QuoteSummaryStore"] and \
+                "earningsChart" in stores["QuoteSummaryStore"]["earnings"] and \
+                "quarterly" in stores["QuoteSummaryStore"]["earnings"]["earningsChart"] and \
+                len(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]) > 0:
+            for d in reversed(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]):
+                if "date" in d and d["date"]:
+                    estimate = "-"
+                    if "estimate" in d and d["estimate"] and "raw" in d["estimate"]:
+                        estimate = d["estimate"]["raw"]
+                    actual = "-"
+                    if "actual" in d and d["actual"] and "raw" in d["actual"]:
+                        actual = d["actual"]["raw"]
+
+                    output_eps["data"][symbol]["quarterly"][d["date"]] = {
+                        "actual": actual,
+                        "estimate": estimate,
+                    }
+        else:
+            logging.info(f'{symbol} no eps data')
+
+        if len(output_eps["data"]) >= BATCH_UPDATE:
+            update_db(output_eps, 'update-eps-data')
+
+
+def get_esg_chart():
+    now = datetime.now().timestamp()
+    file_path = esg_chart_folder / (symbol + '.json')
+    logging.info(f'[{s_i + 1} / {len(symbol_list)}] get {symbol} esgChart data')
+
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            current_data = json.loads(f.read())
+        if "update_time" in current_data and \
+                now - UPDATE_INTERVAL < datetime.strptime(current_data["update_time"], "%Y-%m-%d %H:%M:%S.%f").timestamp():
+            logging.info(f'no need update {symbol}')
+            return True
+
+    ret, resp = send_request("https://query2.finance.yahoo.com/v1/finance/esgChart?symbol=" + symbol, RETRY_SEND_REQUEST)
+    if ret != 0:
+        logging.error('get yahoo data failed, skip it')
+        return True
+
+    data = json.loads(resp)
+    output = {'update_time': str(datetime.now()), 'data': {}}
+    if 'esgChart' not in data or 'result' not in data['esgChart'] or len(data['esgChart']['result']) == 0 or \
+            (len(data['esgChart']['result']) == 1 and data['esgChart']['result'][0] == {}) or \
+            data['esgChart']['error'] is not None:
+        logging.error(f'get yahoo data failed or no data ({data}), skip it')
+        return True
+
+    output['data'] = data
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(output, separators=(',', ':')))
+
+    return True
+
+
 if __name__ == "__main__":
 
     options = webdriver.FirefoxOptions()
@@ -172,7 +307,10 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    now = datetime.now().timestamp()
+    root = pathlib.Path(__file__).parent.resolve()
+    esg_chart_folder = root / "esgChart"
+    if not os.path.exists(esg_chart_folder):
+        os.makedirs(esg_chart_folder)
 
     # get stock list
     symbol_list = get_af_common_data('query-stock-list', RETRY_SEND_REQUEST)
@@ -188,100 +326,10 @@ if __name__ == "__main__":
     output_eps = {"data": {}}
     for s_i in range(len(symbol_list)):
         symbol = symbol_list[s_i]
-        logging.info(f'[{s_i+1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})]')
-
-        esg_latest = symbol in current_esg_data and now - UPDATE_INTERVAL < current_esg_data[symbol]["last_update_time"]
-        recommendation_latest = symbol in current_recommendation_data and now - UPDATE_INTERVAL < current_recommendation_data[symbol]["last_update_time"]
-        eps_latest = symbol in current_eps_data and now - UPDATE_INTERVAL < current_eps_data[symbol]["last_update_time"]
-        if esg_latest and recommendation_latest and eps_latest:
-            logging.info(f'no need update {symbol}')
-            continue
-
-        data = get_stock_data_by_browser(symbol, RETRY_SEND_REQUEST)
-        if data is None:
-            continue
-
-        stores = data['context']['dispatcher']['stores']
-        if "QuoteSummaryStore" not in stores:
-            logging.warning('may occur encrypted data, skip going')
+        if not get_quote_summary_store():
             break
-
-        # parse esg data
-        if not esg_latest:
-            d = stores["QuoteSummaryStore"]["esgScores"]
-            output_esg["data"][symbol] = {
-                "socialScore": "-",
-                "governanceScore": "-",
-                "environmentScore": "-",
-                "percentile": "-",
-                "totalEsg": "-",
-                "last_update_time": int(datetime.now().timestamp()),
-            }
-
-            if len(d) > 0:
-                if "socialScore" in d and d["socialScore"] and "raw" in d["socialScore"]:
-                    output_esg["data"][symbol]["socialScore"] = d["socialScore"]["raw"]
-                if "governanceScore" in d and d["governanceScore"] and "raw" in d["governanceScore"]:
-                    output_esg["data"][symbol]["governanceScore"] = d["governanceScore"]["raw"]
-                if "environmentScore" in d and d["environmentScore"] and "raw" in d["environmentScore"]:
-                    output_esg["data"][symbol]["environmentScore"] = d["environmentScore"]["raw"]
-                if "percentile" in d and d["percentile"] and "raw" in d["percentile"]:
-                    output_esg["data"][symbol]["percentile"] = d["percentile"]["raw"]
-                if "totalEsg" in d and d["totalEsg"] and "raw" in d["totalEsg"]:
-                    output_esg["data"][symbol]["totalEsg"] = d["totalEsg"]["raw"]
-            else:
-                logging.info(f'{symbol} no ESG update')
-
-            if len(output_esg["data"]) >= BATCH_UPDATE:
-                update_db(output_esg, 'update-esg-data')
-
-        # parse recommendation data
-        if not recommendation_latest:
-            output_recommendation["data"][symbol] = {
-                "recommendationKey": "-",
-                "recommendationMean": "-",
-                "last_update_time": int(datetime.now().timestamp()),
-            }
-            if "financialData" in stores["QuoteSummaryStore"] and len(stores["QuoteSummaryStore"]["financialData"]) > 0:
-                d = stores["QuoteSummaryStore"]["financialData"]
-                if "recommendationMean" in d and d["recommendationMean"] and "raw" in d["recommendationMean"]:
-                    output_recommendation["data"][symbol]["recommendationMean"] = d["recommendationMean"]["raw"]
-                if "recommendationKey" in d and d["recommendationKey"]:
-                    output_recommendation["data"][symbol]["recommendationKey"] = d["recommendationKey"]
-            else:
-                logging.info(f'{symbol} no recommendation update')
-
-            if len(output_recommendation["data"]) >= BATCH_UPDATE:
-                update_db(output_recommendation, 'update-recommendation-data')
-
-        # parse earning data
-        if not eps_latest:
-            output_eps["data"][symbol] = {
-                "quarterly": {},
-                "last_update_time": int(datetime.now().timestamp()),
-            }
-            if "earnings" in stores["QuoteSummaryStore"] and \
-                "earningsChart" in stores["QuoteSummaryStore"]["earnings"] and \
-                "quarterly" in stores["QuoteSummaryStore"]["earnings"]["earningsChart"] and \
-                    len(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]) > 0:
-                for d in reversed(stores["QuoteSummaryStore"]["earnings"]["earningsChart"]["quarterly"]):
-                    if "date" in d and d["date"]:
-                        estimate = "-"
-                        if "estimate" in d and d["estimate"] and "raw" in d["estimate"]:
-                            estimate = d["estimate"]["raw"]
-                        actual = "-"
-                        if "actual" in d and d["actual"] and "raw" in d["actual"]:
-                            actual = d["actual"]["raw"]
-
-                        output_eps["data"][symbol]["quarterly"][d["date"]] = {
-                            "actual": actual,
-                            "estimate": estimate,
-                        }
-            else:
-                logging.info(f'{symbol} no eps data')
-
-            if len(output_eps["data"]) >= BATCH_UPDATE:
-                update_db(output_eps, 'update-eps-data')
+        if not get_esg_chart():
+            break
 
     # final update
     update_db(output_esg, 'update-esg-data')

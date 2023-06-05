@@ -27,12 +27,30 @@ jobs:
     - name: Installed package list
       run: |-
         apt list --installed
-    - name: Install Python dependencies
+    - name: Copy master folder
       run: |-
-        python -m pip install -r ./requirements-yahoo_finance_cron_job.txt
+        rsync -Rr ./ ./master/
+    - name: Checkout data branch
+      run: |-
+        git checkout data
+    - name: Install Python dependencies
+      run: |
+        python -m pip install -r ./master/requirements-yahoo_finance_cron_job.txt
     - name: Run sync Finance data
       env:
         AF_URL: ${{ secrets.AF_URL }}
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
       run: |-
-        python ./yahoo_finance_cron_job.py
+        python ./master/yahoo_finance_cron_job.py
+    - name: Copy esgChart
+      run: |-
+        cp -r ./master/esgChart/* ./esgChart
+    - name: Delete master folder
+      run: |-
+        rm -rf ./master
+    - name: Add esgChart and push it
+      run: |-
+        git config --global user.name "zmcx16-bot"
+        git reset --soft HEAD~1
+        git add ./esgChart/\* && git commit -m "updated esgChart"
+        git push -f
