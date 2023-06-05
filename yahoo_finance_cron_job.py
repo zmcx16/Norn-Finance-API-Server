@@ -308,7 +308,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     root = pathlib.Path(__file__).parent.resolve()
-    esg_chart_folder = root / "esgChart"
+    esg_chart_folder = root / "data-output" / "esgChart"
     if not os.path.exists(esg_chart_folder):
         os.makedirs(esg_chart_folder)
 
