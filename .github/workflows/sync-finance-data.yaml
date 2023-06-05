@@ -46,15 +46,3 @@ jobs:
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
       run: |-
         python ./master/yahoo_finance_cron_job.py
-    - name: Copy esgChart result
-      run: |-
-        cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart
-    - name: Delete master folder
-      run: |-
-        rm -rf ./master
-    - name: Add esgChart and push it
-      run: |-
-        git config --global user.name "zmcx16-bot"
-        git reset --soft HEAD~1
-        git add ./data-output/\* && git commit -m "updated esgChart"
-        git push -f

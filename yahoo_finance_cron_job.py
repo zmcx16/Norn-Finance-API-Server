@@ -134,6 +134,14 @@ def update_db(output, api):
     output["data"] = {}
 
 
+def update_github():
+    os.system('cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart')
+    os.system('git config --global user.name "zmcx16-bot"')
+    os.system('git reset --soft HEAD~1')
+    os.system('git add ./data-output/\* && git commit -m "updated esgChart"')
+    os.system('git push -f')
+
+
 def get_af_common_data(api, retry):
     for r in range(retry):
         try:
@@ -298,6 +306,7 @@ def get_esg_chart():
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(output, separators=(',', ':')))
 
+    update_github()
     return True
 
 
@@ -332,6 +341,7 @@ if __name__ == "__main__":
             break
         if not get_esg_chart():
             break
+        break
 
     # final update
     update_db(output_esg, 'update-esg-data')
