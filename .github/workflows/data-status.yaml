@@ -45,12 +45,6 @@ jobs:
     - name: Delete master folder
       run: |-
         rm -rf ./master
-    - name: Add output and push it
-      run: |-
-        git config --global user.name "zmcx16-bot"
-        git reset --soft HEAD~1
-        git add ./output/\* && git commit -m "updated output"
-        git push -f
     - name: Checkout Norn-StockScreener
       uses: actions/checkout@v2
       with: 
