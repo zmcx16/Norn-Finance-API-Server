@@ -265,6 +265,8 @@ def get_quote_summary_store():
         if len(output_eps["data"]) >= BATCH_UPDATE:
             update_db(output_eps, 'update-eps-data')
 
+    return True
+
 
 def get_esg_chart():
     now = datetime.now().timestamp()
