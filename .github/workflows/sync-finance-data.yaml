@@ -47,6 +47,7 @@ jobs:
       run: |-
         python ./master/yahoo_finance_cron_job.py
     - name: Copy esgChart result
+      run: |-
         cp -r -f ./master/esgChart/* ./data-output/esgChart
     - name: Delete master folder
       run: |-
