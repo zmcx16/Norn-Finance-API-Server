@@ -347,5 +347,6 @@ if __name__ == "__main__":
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
     update_db(output_eps, 'update-eps-data')
-
+    update_github()
+    
     logging.info('all task done')
