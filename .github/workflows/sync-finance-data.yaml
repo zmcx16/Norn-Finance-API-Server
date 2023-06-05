@@ -36,16 +36,18 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install -r ./master/requirements-yahoo_finance_cron_job.txt
+    - name: Copy esgChart source
+      run: |-
+        mkdir -p ./master/data-output
+        cp -r ./data-output/esgChart ./master/data-output
     - name: Run sync Finance data
       env:
         AF_URL: ${{ secrets.AF_URL }}
         AF_TOKEN: ${{ secrets.AF_TOKEN }}
       run: |-
         python ./master/yahoo_finance_cron_job.py
-    - name: Copy esgChart
-      run: |-
-        mkdir -p ./data-output/esgChart
-        cp -r ./master/esgChart/* ./data-output/esgChart
+    - name: Copy esgChart result
+        cp -r -f ./master/esgChart/* ./data-output/esgChart
     - name: Delete master folder
       run: |-
         rm -rf ./master
