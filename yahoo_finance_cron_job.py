@@ -21,7 +21,8 @@ DELAY_TIME_SEC = 10
 RETRY_SEND_REQUEST = 10
 RETRY_FAILED_DELAY = 80
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
-BATCH_UPDATE = 10
+BATCH_DB_UPDATE = 10
+BATCH_GITHUB_UPDATE = 100
 
 def send_request(url, retry):
     for r in range(retry):
@@ -222,7 +223,7 @@ def get_quote_summary_store():
         else:
             logging.info(f'{symbol} no ESG update')
 
-        if len(output_esg["data"]) >= BATCH_UPDATE:
+        if len(output_esg["data"]) >= BATCH_DB_UPDATE:
             update_db(output_esg, 'update-esg-data')
 
     # parse recommendation data
@@ -241,7 +242,7 @@ def get_quote_summary_store():
         else:
             logging.info(f'{symbol} no recommendation update')
 
-        if len(output_recommendation["data"]) >= BATCH_UPDATE:
+        if len(output_recommendation["data"]) >= BATCH_DB_UPDATE:
             update_db(output_recommendation, 'update-recommendation-data')
 
     # parse earning data
@@ -270,7 +271,7 @@ def get_quote_summary_store():
         else:
             logging.info(f'{symbol} no eps data')
 
-        if len(output_eps["data"]) >= BATCH_UPDATE:
+        if len(output_eps["data"]) >= BATCH_DB_UPDATE:
             update_db(output_eps, 'update-eps-data')
 
     return True
@@ -306,7 +307,8 @@ def get_esg_chart():
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(output, separators=(',', ':')))
 
-    update_github()
+    if (s_i+1) % BATCH_GITHUB_UPDATE == 0:
+        update_github()
     return True
 
 
@@ -341,12 +343,11 @@ if __name__ == "__main__":
             break
         if not get_esg_chart():
             break
-        break
 
     # final update
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
     update_db(output_eps, 'update-eps-data')
     update_github()
-    
+
     logging.info('all task done')
