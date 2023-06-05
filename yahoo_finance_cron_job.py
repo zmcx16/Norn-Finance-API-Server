@@ -135,7 +135,7 @@ def update_db(output, api):
     output["data"] = {}
 
 
-def update_github():
+def update_esg_chart_github():
     os.system('cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart')
     os.system('git config --global user.name "zmcx16-bot"')
     os.system('git reset --soft HEAD~1')
@@ -307,8 +307,6 @@ def get_esg_chart():
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(output, separators=(',', ':')))
 
-    if (s_i+1) % BATCH_GITHUB_UPDATE == 0:
-        update_github()
     return True
 
 
@@ -339,15 +337,19 @@ if __name__ == "__main__":
     output_eps = {"data": {}}
     for s_i in range(len(symbol_list)):
         symbol = symbol_list[s_i]
+
         if not get_quote_summary_store():
             break
+
         if not get_esg_chart():
             break
+        elif (s_i + 1) % BATCH_GITHUB_UPDATE == 0:
+            update_esg_chart_github()
 
     # final update
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
     update_db(output_eps, 'update-eps-data')
-    update_github()
+    update_esg_chart_github()
 
     logging.info('all task done')
