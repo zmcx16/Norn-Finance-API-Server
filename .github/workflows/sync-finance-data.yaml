@@ -39,7 +39,7 @@ jobs:
     - name: Copy esgChart source
       run: |-
         mkdir -p ./master/data-output
-        cp -r ./data-output/esgChart ./master/data-output
+        [ -d "./data-output/esgChart" ] && cp -r ./data-output/esgChart ./master/data-output
     - name: Run sync Finance data
       env:
         AF_URL: ${{ secrets.AF_URL }}
