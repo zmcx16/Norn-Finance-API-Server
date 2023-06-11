@@ -136,12 +136,12 @@ def update_db(output, api):
 
 
 def update_esg_chart_github():
-    command = 'cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart' + ' && ' 
+    command = ('cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart' + ' && ' 
     + 'git config --global user.name "zmcx16-bot"' + ' && '
     + 'git config --global user.email "zmcx16-bot@zmcx16.moe"' + ' && '
     + 'git reset --soft HEAD~1' + ' && '
     + 'git add ./data-output/\* && git commit -m "updated esgChart"' + ' && '
-    + 'git push -f'
+    + 'git push -f')
     os.system(command)
 
 
