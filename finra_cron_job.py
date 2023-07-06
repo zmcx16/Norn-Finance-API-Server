@@ -262,7 +262,8 @@ def main():
                 sys.exit(1)
             stock_short_history = get_short_data(symbol)
 
-        if stock_short_history and len(stock_short_history) > 0 and base_info_dict[symbol]["Shs Float"] != "-":
+        if stock_short_history and len(stock_short_history) > 0 and base_info_dict[symbol]["Shs Float"] != "-" and \
+                stock_short_history[0]["averageDailyVolumeQuantity"] != 0:
             stock_short_stat["data"][symbol] = \
                 {"Shs Float": base_info_dict[symbol]["Shs Float"],
                  "Short Float": stock_short_history[0]["currentShortPositionQuantity"] / base_info_dict[symbol]["Shs Float"],
