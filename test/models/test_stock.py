@@ -31,6 +31,22 @@ def test_get_ex_dividend_list():
     print(len(output['data']))
 
 
+def test_get_all_dividend_list():
+    output = stock.get_all_dividend_list()
+    assert output is not None
+    assert len(output['data']) > 0
+    print(output)
+    print(len(output['data']))
+
+
+def test_get_dividend_history():
+    output = stock.get_dividend_history("https://www.dividend.com/stocks/consumer-discretionary/retail-discretionary/automotive-retailers/aap-advance-auto-parts/")
+    assert output is not None
+    assert len(output['data']) > 0
+    print(output)
+    print(len(output['data']))
+
+
 def test_get_stock_history_yahoo():
     output, extra_info = stock.get_stock_history("T", "1y", proxy=None, stock_src="yahoo")
     assert output is not None
