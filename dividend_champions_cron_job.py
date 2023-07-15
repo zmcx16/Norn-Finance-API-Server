@@ -37,8 +37,7 @@ def main():
     logging.basicConfig(level="INFO")
 
     root = pathlib.Path(__file__).parent.resolve()
-    norn_data_folder_path = root / ".." / "norn-data"
-    dividend_path = norn_data_folder_path / 'dividend'
+    dividend_path = root / 'dividend'
     dividend_historical_path = dividend_path / "historical-quotes"
     dividend_champions_path = dividend_path / 'champions.xlsx'
 
