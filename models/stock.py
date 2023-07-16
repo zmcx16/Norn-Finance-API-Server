@@ -326,7 +326,9 @@ def get_dividend_history(referer):
 "close_on_ex_date": "0.35%"
                 """
                 row_output = {"adjusted_amount": float(dividend["adjusted_amount"].replace('$', '')),
-                              "declared_date": dividend["declared_date"], "ex_date": dividend["ex_date"]}
+                              "declared_date": dividend["declared_date"], "ex_date": dividend["ex_date"], 
+                              "payment_types": dividend["payment_types"], "type": dividend["type"], 
+                              "payment_frequency": dividend["payment_frequency"]}
                 output['data'].append(row_output)
     else:
         logging.info('send_post failed or done: {ret}'.format(ret=ret))
