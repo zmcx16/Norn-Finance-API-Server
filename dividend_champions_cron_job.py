@@ -8,7 +8,7 @@ import requests
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from models.stock import get_all_dividend_list, get_dividend_history
+from models.stock import get_all_dividend_list, get_dividend_history_by_yahoo
 
 
 DELAY_TIME_SEC = 1
@@ -101,7 +101,7 @@ def main():
         if champions_map[symbol] == "":
             logging.info('no dividend history for {symbol}'.format(symbol=symbol))
             continue
-        dividend_history = get_dividend_history(champions_map[symbol])
+        dividend_history = get_dividend_history_by_yahoo(symbol)
         logging.info(dividend_history)
         if len(dividend_history["data"]) == 0:
             logging.info('no dividend history for {symbol}'.format(symbol=symbol))

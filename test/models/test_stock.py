@@ -12,6 +12,9 @@ def test_get_stock():
     print("****** dividends ******")
     print(output.dividends)
     print("***********************")
+    print("****** history ******")
+    print(output.history(period="max", interval="1d"))
+    print("***********************")
     # print("****** calendar *******")
     # print(output.calendar)
     # print("***********************")
@@ -80,3 +83,10 @@ def test_price_simulation_all_by_mc():
         plt.plot(output[i], linewidth=0.5)
     plt.show()
     """
+
+
+def test_get_dividend_history_by_yahoo():
+    output = stock.get_dividend_history_by_yahoo("T")
+    assert output is not None
+    assert len(output["data"]) > 0
+    print(output)

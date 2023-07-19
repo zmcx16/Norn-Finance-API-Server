@@ -274,7 +274,7 @@ def get_all_dividend_list():
     return output
 
 
-def get_dividend_history(referer):
+def get_dividend_history_by_dividend_com(referer):
     logging.info('get_dividend_history start')
     url = ' https://www.dividend.com/api/data_set/'
     headers = {
@@ -334,4 +334,29 @@ def get_dividend_history(referer):
         logging.info('send_post failed or done: {ret}'.format(ret=ret))
 
     logging.info('get_dividend_history end')
+    return output
+
+
+def get_dividend_history_by_yahoo(symbol):
+    logging.info('get_dividend_history_by_yahoo start')
+    data_dict = {}
+    data = get_stock(symbol)
+    dividends = data.dividends.to_dict()
+    for key, value in dividends.items():
+        data_dict[key.strftime('%Y-%m-%d')] = {}
+
+    history = data.history(period="max", interval="1d").to_dict()
+    for ohlcv_key, ohlcv_val in history.items():
+        for key, value in ohlcv_val.items():
+            d = key.strftime('%Y-%m-%d')
+            if d in data_dict:
+                data_dict[d][ohlcv_key] = value
+
+    output = {"data": []}
+    for key, value in data_dict.items():
+        row_output = {"date": key}
+        row_output.update(value)
+        output["data"].append(row_output)
+
+    logging.info('get_dividend_history_by_yahoo end')
     return output
