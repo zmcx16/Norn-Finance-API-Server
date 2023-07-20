@@ -340,6 +340,7 @@ def get_dividend_history_by_dividend_com(referer):
 def get_dividend_history_by_yahoo(symbol):
     logging.info('get_dividend_history_by_yahoo start')
     data_dict = {}
+    output_dict = {}
     data = get_stock(symbol)
     dividends = data.dividends.to_dict()
     for key, value in dividends.items():
@@ -349,11 +350,14 @@ def get_dividend_history_by_yahoo(symbol):
     for ohlcv_key, ohlcv_val in history.items():
         for key, value in ohlcv_val.items():
             d = key.strftime('%Y-%m-%d')
-            if d in data_dict:
-                data_dict[d][ohlcv_key] = value
+            if ohlcv_key is not 'Dividends' or d in data_dict:
+                if d not in output_dict:
+                    output_dict[d] = {}
+                if ohlcv_key is 'Dividends' or ohlcv_key is 'Volume' or ohlcv_key is 'Close':
+                    output_dict[d][ohlcv_key] = value
 
     output = {"data": []}
-    for key, value in data_dict.items():
+    for key, value in output_dict.items():
         row_output = {"date": key}
         row_output.update(value)
         output["data"].append(row_output)
