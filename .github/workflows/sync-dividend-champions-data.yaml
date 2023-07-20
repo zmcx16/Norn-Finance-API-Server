@@ -50,5 +50,5 @@ jobs:
         git config --global user.name "zmcx16-bot"
         git config --global user.email "zmcx16-bot@zmcx16.moe"
         git reset --soft "gh-pages^"
-        git add ./norn-data/dividend/\* && git commit -m "updated dividend"
+        git add ./norn-data/dividend/\* && git commit -m "updated website"
         git push -f
