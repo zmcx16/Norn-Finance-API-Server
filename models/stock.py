@@ -350,10 +350,10 @@ def get_dividend_history_by_yahoo(symbol):
     for ohlcv_key, ohlcv_val in history.items():
         for key, value in ohlcv_val.items():
             d = key.strftime('%Y-%m-%d')
-            if ohlcv_key is not 'Dividends' or d in data_dict:
+            if ohlcv_key != 'Dividends' or d in data_dict:
                 if d not in output_dict:
                     output_dict[d] = {}
-                if ohlcv_key is 'Dividends' or ohlcv_key is 'Volume' or ohlcv_key is 'Close':
+                if ohlcv_key == 'Dividends' or ohlcv_key == 'Volume' or ohlcv_key == 'Close':
                     output_dict[d][ohlcv_key] = value
 
     output = {"data": []}
