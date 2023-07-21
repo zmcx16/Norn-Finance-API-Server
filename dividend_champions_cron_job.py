@@ -58,7 +58,7 @@ def main():
 
     df = pd.read_excel(dividend_champions_path, sheet_name='All')
     headers = df.iloc[[1]]
-    fields = ['No Years', 'Div Yield', '5Y Avg Yield', 'DGR 1Y', 'DGR 3Y', 'DGR 5Y', 'DGR 10Y']
+    fields = ['No Years', 'Div Yield', '5Y Avg Yield', 'DGR 1Y', 'DGR 3Y', 'DGR 5Y', 'DGR 10Y', 'Payouts/ Year']
     field_map = {}
     symbol_index = -1
 
