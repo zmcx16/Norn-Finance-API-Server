@@ -42,8 +42,8 @@ def test_get_all_dividend_list():
     print(len(output['data']))
 
 
-def test_get_dividend_history():
-    output = stock.get_dividend_history("https://www.dividend.com/stocks/consumer-discretionary/retail-discretionary/automotive-retailers/aap-advance-auto-parts/")
+def test_get_dividend_history_by_dividend_com():
+    output = stock.get_dividend_history_by_dividend_com("https://www.dividend.com/stocks/consumer-discretionary/retail-discretionary/automotive-retailers/aap-advance-auto-parts/")
     assert output is not None
     assert len(output['data']) > 0
     print(output)
