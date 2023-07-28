@@ -51,5 +51,5 @@ jobs:
         git config --global user.name "zmcx16-bot"
         git config --global user.email "zmcx16-bot@zmcx16.moe"
         git reset --soft "gh-pages^"
-        git add ./Norn-StockScreener/norn-data/ranking/employees.json && git commit -m "updated website"
+        git add ./norn-data/\* && git commit -m "updated website & norn-data"
         git push -f
