@@ -21,6 +21,7 @@ afscreener_token = os.environ.get("AF_TOKEN", "")
 
 def send_request(url, for_cookie=False):
     for r in range(RETRY_CNT):
+        res = None
         try:
             res = requests.get(url, headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
@@ -28,6 +29,10 @@ def send_request(url, for_cookie=False):
             res.raise_for_status()
         except Exception as ex:
             logging.error('Generated an exception: {ex}'.format(ex=ex))
+
+        if res is None:
+            logging.error('send_request failed and not to retry')
+            return -3, "res is None", ""
 
         if res.status_code == 200:
             if for_cookie:
@@ -74,7 +79,7 @@ def main():
 
     # get stock list
     stock_info = get_stock_info()
-    print(stock_info)
+    logging.info(stock_info)
 
     # get employees
     employees_stat = {'update_time': str(datetime.now()), "data": []}
@@ -87,7 +92,6 @@ def main():
         ret, resp, url = send_request(employees_url, False)
         if ret == 0:
             try:
-                # mp-table-body
                 soup = BeautifulSoup(resp, "html.parser")
                 dom = etree.HTML(str(soup))
                 tables = dom.xpath('//table[@class="historical_data_table table"]')
@@ -161,7 +165,8 @@ def main():
 
             except Exception as ex:
                 logging.error(traceback.format_exc())
-
+        else:
+            logging.error('send_request failed: {ret}, skip it'.format(ret=ret))
         time.sleep(DELAY_TIME_SEC)
 
     dt = sorted(dt, key=lambda d: d['latest_growth'], reverse=True)
