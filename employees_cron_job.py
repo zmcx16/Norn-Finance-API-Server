@@ -162,8 +162,6 @@ def main():
             except Exception as ex:
                 logging.error(traceback.format_exc())
 
-        if s_i % 10 == 0:
-            break
         time.sleep(DELAY_TIME_SEC)
 
     dt = sorted(dt, key=lambda d: d['latest_growth'], reverse=True)
