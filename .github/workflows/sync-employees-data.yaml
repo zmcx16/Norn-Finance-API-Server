@@ -46,7 +46,7 @@ jobs:
         fetch-depth: 0
     - name: Copy employees & push Norn-StockScreener
       run: |-
-        cp -rf ./employees.json ./Norn-StockScreener/norn-data/ranking/
+        cp -f ./employees.json ./Norn-StockScreener/norn-data/ranking/
         cd ./Norn-StockScreener
         git config --global user.name "zmcx16-bot"
         git config --global user.email "zmcx16-bot@zmcx16.moe"
