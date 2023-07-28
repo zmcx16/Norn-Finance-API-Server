@@ -1,0 +1,53 @@
+name: SyncEmployeesData
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 4 * * 6'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Configure pip caching
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Installed package list
+      run: |-
+        apt list --installed
+    - name: Install Python dependencies
+      run: |-
+        python -m pip install -r ./requirements-employees_cron_job.txt
+    - name: Run sync employees data
+      run: |-
+        python ./employees_cron_job.py
+    - name: Checkout Norn-StockScreener
+      uses: actions/checkout@v2
+      with: 
+        ref: gh-pages
+        repository: zmcx16/Norn-StockScreener
+        token: ${{ secrets.ACTIONS_TOKEN }}
+        path: ./Norn-StockScreener
+        fetch-depth: 0
+    - name: Copy employees & push Norn-StockScreener
+      run: |-
+        rm -rf ./Norn-StockScreener/norn-data/ranking/employees.json
+        cp -r ./employees.json ./Norn-StockScreener/norn-data/ranking/
+        cd ./Norn-StockScreener
+        git config --global user.name "zmcx16-bot"
+        git config --global user.email "zmcx16-bot@zmcx16.moe"
+        git reset --soft "gh-pages^"
+        git add ./Norn-StockScreener/norn-data/ranking/employees.json && git commit -m "updated website"
+        git push -f
