@@ -119,6 +119,11 @@ def main():
                         logging.error('Generated an exception: {ex}, {data}'.format(ex=ex, data=[tds[0].text, tds[1].text]))
                         continue
 
+                # check all empty data
+                if len(employees_list) == 0:
+                    logging.error('no employees data, skip it')
+                    continue
+
                 o = {"symbol": symbol, "history": employees_list, "url": url, 'neg_count': 0, 'latest_growth': 0,
                      'avg_growth': 0, 'tags': []}
                 neg_count = 0
@@ -148,8 +153,6 @@ def main():
                         avg /= len(employees_list) - 1
 
                 # tag
-                if neg_count == 0:
-                    o["tags"].append("all_positive")
                 if keep_growth and len(employees_list) >= 2:
                     o["tags"].append("keep_growth")
                 if keep_growth_cnt >= 3:
