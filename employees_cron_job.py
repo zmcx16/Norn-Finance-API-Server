@@ -129,6 +129,10 @@ def main():
                 neg_count = 0
                 keep_growth = True
                 keep_growth_cnt = 0
+                latest_employees_cnt = 0
+                if len(employees_list) > 0:
+                    latest_employees_cnt = employees_list[0]['employees_cnt']
+
                 for i in range(len(employees_list)):
                     if i >= 1:
                         if employees_list[i - 1]['employees_cnt'] <= employees_list[i]['employees_cnt']:
@@ -161,6 +165,17 @@ def main():
                     o["tags"].append("keep_growth_5")
                 if keep_growth_cnt >= 10:
                     o["tags"].append("keep_growth_10")
+
+                if latest_employees_cnt >= 100:
+                    o["tags"].append("employees_over_100")
+                if latest_employees_cnt >= 500:
+                    o["tags"].append("employees_over_500")
+                if latest_employees_cnt >= 1000:
+                    o["tags"].append("employees_over_1000")
+                if latest_employees_cnt >= 5000:
+                    o["tags"].append("employees_over_5000")
+                if latest_employees_cnt >= 10000:
+                    o["tags"].append("employees_over_10000")
 
                 o["neg_count"] = neg_count
                 o["avg_growth"] = avg
