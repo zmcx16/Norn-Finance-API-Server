@@ -177,6 +177,9 @@ def main():
                 if latest_employees_cnt >= 10000:
                     o["tags"].append("employees_over_10000")
 
+                if o["latest_growth"] >= avg:
+                    o["tags"].append("latest_growth_over_avg")
+
                 o["neg_count"] = neg_count
                 o["avg_growth"] = avg
                 dt.append(o)
