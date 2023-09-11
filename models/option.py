@@ -53,6 +53,9 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
     elif weekday == 2:
         last_trade_days_wo_weekend = last_trade_days_wo_weekend + 3
 
+    if last_trade_days_wo_weekend > 7:
+        last_trade_days_wo_weekend += last_trade_days / 7 * 2
+
     try:
         ticker = yf.Ticker(symbol)
         date_list = get_option_date(symbol)
