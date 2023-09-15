@@ -140,7 +140,7 @@ def update_esg_chart_github():
     + 'git config --global user.name "zmcx16-bot"' + ' && '
     + 'git config --global user.email "zmcx16-bot@zmcx16.moe"' + ' && '
     + 'git reset --soft HEAD~1' + ' && '
-    + 'git add ./data-output/\* && git commit -m "updated esgChart"' + ' && '
+    + 'git add ./data-output/\* && git commit -m "updated data"' + ' && '
     + 'git push -f')
     os.system(command)
 
