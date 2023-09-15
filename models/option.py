@@ -269,3 +269,50 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
         calc_kelly_criterion(stock_data["Close"], ewma_his_vol, contracts, CalcKellyType.KellyCriterion_IV, iteration)
 
     return stock_price, extra_info, ewma_his_vol, contracts
+
+
+def get_option_pcr(symbol: str, range_days: int):
+    option_data = get_option_chain(symbol, 0, range_days, 0, 0, range_days)
+    output = {
+        "symbol": symbol,
+        "PCR_OpenInterest": 0,
+        "PCR_Volume": 0,
+        "calls": {
+            "totalVolume": 0,
+            "totalOpenInterest": 0,
+            "detail": []
+        },
+        "puts": {
+            "totalVolume": 0,
+            "totalOpenInterest": 0,
+            "detail": []
+        }
+    }
+    for contract in option_data:
+        expiry_date = contract["expiryDate"]
+
+        def push_contract(op_type):
+            c = {
+                "totalVolume": 0,
+                "totalOpenInterest": 0,
+                "expiryDate": expiry_date
+            }
+            for op in contract[op_type]:
+                c["totalVolume"] += op["volume"]
+                c["totalOpenInterest"] += op["openInterest"]
+            output[op_type]["detail"].append(c)
+
+        push_contract("calls")
+        push_contract("puts")
+
+    for op_type in ["calls", "puts"]:
+        output[op_type]["totalVolume"] = sum([x["totalVolume"] for x in output[op_type]["detail"]])
+        output[op_type]["totalOpenInterest"] = sum([x["totalOpenInterest"] for x in output[op_type]["detail"]])
+
+    if output["calls"]["totalOpenInterest"] > 0:
+        output["PCR_OpenInterest"] = output["puts"]["totalOpenInterest"] / output["calls"]["totalOpenInterest"]
+    if output["calls"]["totalVolume"] > 0:
+        output["PCR_Volume"] = output["puts"]["totalVolume"] / output["calls"]["totalVolume"]
+
+    return output
+

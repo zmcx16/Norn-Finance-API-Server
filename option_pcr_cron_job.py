@@ -8,9 +8,11 @@ import traceback
 import argparse
 import threading
 import queue
+from datetime import datetime
 from urllib.parse import urlencode
+from fastapi.testclient import TestClient
 
-from models.option import get_option_chain
+from main import app
 from utils import web
 
 
@@ -23,6 +25,7 @@ RETRY_CNT = 5
 DELAY_TIME_SEC = 0.8
 THREAD_CNT = 1
 
+nf_client = TestClient(app)
 api_thread_lock = threading.Lock()
 
 
@@ -76,14 +79,11 @@ class FinanceAPIThread(threading.Thread):
                 logging.info("({current_index}/{total_cnt}) get {symbol}".format(
                     current_index=FinanceAPIThread.current_index,
                     total_cnt=FinanceAPIThread.total_cnt, symbol=symbol))
-
                 resp = FinanceAPIThread.__get_option_pcr_data(symbol, range_days)
                 if resp is None:
                     logging.error("get {symbol} failed".format(symbol=symbol))
-                elif len(resp) == 0:
-                    logging.info("{symbol} has no any contract with query conditions, skip it".format(symbol=symbol))
                 else:
-                    self.output.append({"symbol": symbol, "data": resp})
+                    self.output.append(resp)
 
                 FinanceAPIThread.__add_index()
                 time.sleep(DELAY_TIME_SEC)
@@ -109,31 +109,16 @@ class FinanceAPIThread(threading.Thread):
     @staticmethod
     def __get_option_pcr_data(symbol, range_days):
         try:
-            option_data = get_option_chain(symbol, 0, range_days, 0, 0, range_days)
+            api = "/option/get-option-pcr?symbol=" + symbol + "&range_days=" + str(range_days)
+
+            response = nf_client.get(api)
+            if response.status_code != 200:
+                logging.error("get " + symbol + " option pcr data failed")
+                return None
+
+            option_data = response.json()
             logging.info(option_data)
-            output = {
-                "symbol": symbol,
-                "calls": [],
-                "puts": []
-            }
-            for contract in option_data:
-                expiry_date = contract["expiryDate"]
-
-                def push_contract(op_type):
-                    c = {
-                        "total_volume": 0,
-                        "total_openInterest": 0,
-                        "expiry": expiry_date
-                    }
-                    for op in contract[op_type]:
-                        c["total_volume"] += op["volume"]
-                        c["total_openInterest"] += op["openInterest"]
-                    output[op_type].append(c)
-
-                push_contract("calls")
-                push_contract("puts")
             return option_data
-
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -144,10 +129,9 @@ if __name__ == "__main__":
 
     start_time = time.perf_counter()
     root = pathlib.Path(__file__).parent.resolve()
-    stock_options_pcr_folder_path = root / "options" / "put-call-ratio"
-    stock_options_pcr_folder_historical_path = stock_options_pcr_folder_path / "historical"
-    if not os.path.exists(stock_options_pcr_folder_historical_path):
-        os.makedirs(stock_options_pcr_folder_historical_path)
+    stock_options_pcr_folder_path = root / "output"
+    if not os.path.exists(stock_options_pcr_folder_path):
+        os.makedirs(stock_options_pcr_folder_path)
 
     task_queue = queue.Queue()
 
@@ -156,6 +140,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
+    output = {'update_time': str(datetime.now()), 'data': {}}
 
     # stock_info = get_stock_info()
     stock_info = ["AAPL"]
@@ -174,12 +159,25 @@ if __name__ == "__main__":
         worker.join()
 
     # save output
-    output_data = []
     for worker in work_list:
         for d in worker.output:
-            output_data.append(d)
+            output['data'][d['symbol']] = {
+                'PCR_OpenInterest': d['PCR_OpenInterest'],
+                'PCR_Volume': d['PCR_Volume'],
+                'calls': {
+                    'totalVolume': d['calls']['totalVolume'],
+                    'totalOpenInterest': d['calls']['totalOpenInterest'],
+                },
+                'puts': {
+                    'totalVolume': d['puts']['totalVolume'],
+                    'totalOpenInterest': d['puts']['totalOpenInterest'],
+                },
+            }
 
-    logging.info(output_data)
+    logging.info(output)
+    with open(stock_options_pcr_folder_path / 'put-call-ratio.json', 'w',
+              encoding='utf-8') as f_it:
+        f_it.write(json.dumps(output, separators=(',', ':')))
 
     logging.info('Time Taken: ' + time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - start_time)))
     logging.info('all task done')

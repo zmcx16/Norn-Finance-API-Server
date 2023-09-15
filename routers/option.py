@@ -2,12 +2,12 @@ import time
 import threading
 
 from typing import List, Optional
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response
 from fastapi.websockets import WebSocket
 from pydantic import BaseModel
 
 from rate_limiter import limiter
-from models import option, stock, formula
+from models import option, stock
 
 
 class ValuationData(BaseModel):
@@ -65,6 +65,26 @@ class OptionsChainQuotesValuationResponse(BaseModel):
     stockExtraInfo: Optional[StockExtraInfo]
     EWMA_historicalVolatility: Optional[float]
     contracts: List[OptionsChainQuotesData]
+
+
+class OptionsVolumeOpenInterestData(BaseModel):
+    totalVolume: int
+    totalOpenInterest: int
+    expiryDate: str
+
+
+class OptionsAllVolumeOpenInterestData(BaseModel):
+    totalVolume: int
+    totalOpenInterest: int
+    detail: List[OptionsVolumeOpenInterestData]
+
+
+class OptionsPutCallRatioResponse(BaseModel):
+    symbol: str
+    PCR_OpenInterest: float
+    PCR_Volume: float
+    calls: OptionsAllVolumeOpenInterestData
+    puts: OptionsAllVolumeOpenInterestData
 
 
 router = APIRouter(
@@ -174,3 +194,14 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
             time.sleep(1.0)
 
     await websocket.close()
+
+
+@router.get("/get-option-pcr", tags=["put-call-ratio"], response_model=OptionsPutCallRatioResponse)
+@limiter.app_limiter.limit("100/minute")
+async def get_option_pcr(request: Request, response: Response, symbol: str,
+                                         range_days: Optional[int] = 365):
+    if not symbol:
+        raise HTTPException(status_code=400, detail="Invalid request parameter")
+
+    output = option.get_option_pcr(symbol, range_days)
+    return output

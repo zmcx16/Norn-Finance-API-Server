@@ -86,7 +86,7 @@ def test_price_simulation_all_by_mc():
 
 
 def test_get_dividend_history_by_yahoo():
-    output = stock.get_dividend_history_by_yahoo("MMM")
+    output = stock.get_dividend_history_by_yahoo("EMR")
     assert output is not None
     assert len(output["data"]) > 0
     print(output)

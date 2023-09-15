@@ -17,7 +17,7 @@ def test_options_chain_quotes():
 
 def test_options_chain_quotes_valuation():
     # "/option/quote-valuation?symbol=T&ewma_his_vol_lambda=0.94&only_otm=false&specific_contract=call_2022-04-08_24"
-    response = client.get("/option/quote-valuation?symbol=NKE&ewma_his_vol_lambda=0.94&only_otm=true&"
+    response = client.get("/option/quote-valuation?symbol=WFC&ewma_his_vol_lambda=0.94&only_otm=true&"
                           "calc_kelly_iv=true&iteration=100000")
     assert response.status_code == 200
     output = response.json()
@@ -32,3 +32,9 @@ def test_ws_options_chain_quotes_valuation():
         assert output is not None
         assert len(output["contracts"]) > 0
         print(output)
+
+
+def test_get_option_pcr():
+    response = client.get("/option/get-option-pcr?symbol=INTC&range_days=365")
+    assert response.status_code == 200
+    print(response.json())
