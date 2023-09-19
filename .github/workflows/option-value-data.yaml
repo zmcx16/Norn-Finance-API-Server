@@ -55,7 +55,7 @@ jobs:
         fetch-depth: 0
     - name: Copy options & push Norn-StockScreener
       run: |-
-        rm -rf ./Norn-StockScreener/norn-data/options
+        rm -f ./Norn-StockScreener/norn-data/options/*
         cp -r ./output ./Norn-StockScreener/norn-data/
         cd ./Norn-StockScreener
         mv ./norn-data/output ./norn-data/options
