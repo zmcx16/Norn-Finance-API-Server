@@ -27,8 +27,7 @@ jobs:
     - name: Installed package list
       run: |-
         apt list --installed
-        sudo apt-get update && sudo apt-get install -y hub
-        sudo apt-get install cling-12
+        sudo apt-get update && sudo apt-get install -y hub && sudo apt-get install -y cling-12
     - name: Install Python dependencies
       run: |-
         python -m pip install -r ./requirements-finra_cron_job.txt
