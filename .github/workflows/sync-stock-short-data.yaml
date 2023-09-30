@@ -27,6 +27,7 @@ jobs:
     - name: Installed package list
       run: |-
         apt list --installed
+        sudo echo deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main >>/etc/apt/sources.list
         sudo apt-get update && sudo apt-get install -y hub && sudo apt-get install -y cling-12
     - name: Install Python dependencies
       run: |-
