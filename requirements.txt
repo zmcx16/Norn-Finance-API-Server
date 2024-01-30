@@ -1,5 +1,5 @@
 yfinance>=0.2.36
-beautifulsoup>=4.11.1
+beautifulsoup4>=4.11.1
 html5lib>=1.1
 pydantic>=1.8.2
 fastapi>=0.86.0
