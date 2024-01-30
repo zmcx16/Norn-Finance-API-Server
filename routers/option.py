@@ -18,9 +18,9 @@ class ValuationData(BaseModel):
     KellyCriterion_sell: float
     KellyCriterion_MU_0_sell: float
     KellyCriterion_MU_0_buy: float
-    KellyCriterion_IV_buy: Optional[float]
-    KellyCriterion_IV_sell: Optional[float]
-    exerciseProbability: Optional[float]
+    KellyCriterion_IV_buy: Optional[float] = None
+    KellyCriterion_IV_sell: Optional[float] = None
+    exerciseProbability: Optional[float] = None
     delta: float
     gamma: float
     vega: float
@@ -39,7 +39,7 @@ class OptionsChainBaseData(BaseModel):
     volume: int
     openInterest: int
     impliedVolatility: float
-    valuationData: Optional[ValuationData]
+    valuationData: Optional[ValuationData] = None
 
 
 class StockExtraInfo(BaseModel):
@@ -54,16 +54,16 @@ class OptionsChainQuotesData(BaseModel):
 
 class OptionsChainQuotesResponse(BaseModel):
     symbol: str
-    stockPrice: Optional[float]
-    stockExtraInfo: Optional[StockExtraInfo]
+    stockPrice: Optional[float] = None
+    stockExtraInfo: Optional[StockExtraInfo] = None
     contracts: List[OptionsChainQuotesData]
 
 
 class OptionsChainQuotesValuationResponse(BaseModel):
     symbol: str
-    stockPrice: Optional[float]
-    stockExtraInfo: Optional[StockExtraInfo]
-    EWMA_historicalVolatility: Optional[float]
+    stockPrice: Optional[float] = None
+    stockExtraInfo: Optional[StockExtraInfo] = None
+    EWMA_historicalVolatility: Optional[float] = None
     contracts: List[OptionsChainQuotesData]
 
 
