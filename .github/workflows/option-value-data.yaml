@@ -55,12 +55,11 @@ jobs:
         fetch-depth: 0
     - name: Copy options & push Norn-StockScreener
       run: |-
-        rm -rf ./Norn-StockScreener/norn-data/options
-        cp -r ./output ./Norn-StockScreener/norn-data/
+        rm -f ./Norn-StockScreener/norn-data/options/*.json
+        cp -r ./output/*.json ./Norn-StockScreener/norn-data/options/
         cd ./Norn-StockScreener
-        mv ./norn-data/output ./norn-data/options
         git config --global user.name "zmcx16-bot"
         git config --global user.email "zmcx16-bot@zmcx16.moe"
         git reset --soft "gh-pages^"
-        git add ./norn-data/options/\* && git commit -m "updated options"
+        git add ./norn-data/\* && git commit -m "updated data"
         git push -f

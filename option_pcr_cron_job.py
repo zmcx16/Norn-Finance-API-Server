@@ -142,8 +142,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=args.log_level)
     output = {'update_time': str(datetime.now()), 'data': {}}
 
-    # stock_info = get_stock_info()
-    stock_info = ["AAPL"]
+    stock_info = get_stock_info()
     logging.info(stock_info)
     FinanceAPIThread.reset_index(len(stock_info))
     for symbol in stock_info:

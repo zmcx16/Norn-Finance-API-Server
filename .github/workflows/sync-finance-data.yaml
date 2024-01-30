@@ -6,7 +6,7 @@ on:
     - cron:  '0 12 * * *'
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     if: github.ref == 'refs/heads/master'
     steps:
     - name: Check out repo
@@ -24,9 +24,6 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    - name: Installed package list
-      run: |-
-        apt list --installed
     - name: Copy master folder
       run: |-
         rsync -Rr ./ ./master/
