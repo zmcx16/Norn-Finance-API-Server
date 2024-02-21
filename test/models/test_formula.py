@@ -1,9 +1,13 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from pytest import approx
 
 from models import formula
+
+
+sns.set_style('dark')
 
 
 def test_historical_volatility():
@@ -76,5 +80,91 @@ def test_price_simulation_by_mc():
     plt.grid(linestyle='dotted')
     for i in range(len(output)):
         plt.plot(output[i], linewidth=0.5)
+    plt.show()
+    """
+
+
+def test_benford_digit_probs():
+    error = 0.01
+    digit_probs = formula.Common.benford_digit_probs()
+    assert len(digit_probs) == 9
+    assert abs(digit_probs[0] - 0.301) < error
+    assert abs(digit_probs[1] - 0.176) < error
+    assert abs(digit_probs[2] - 0.125) < error
+    assert abs(digit_probs[3] - 0.097) < error
+    assert abs(digit_probs[4] - 0.079) < error
+    assert abs(digit_probs[5] - 0.067) < error
+    assert abs(digit_probs[6] - 0.058) < error
+    assert abs(digit_probs[7] - 0.051) < error
+    assert abs(digit_probs[8] - 0.046) < error
+
+    """
+    digits = np.arange(1, 10)
+    plt.rc('font', size=16)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.bar(digits, digit_probs)
+    plt.xticks(digits)
+    plt.xlabel('Digits')
+    plt.ylabel('Probability')
+    plt.title("Benford's Law: Probability of Leading Digits")
+    plt.show()
+    """
+
+
+def test_leading_digit_count():
+    fib_nums = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
+    leading_digit_prob = formula.Common.leading_digit_count(fib_nums)
+    assert len(leading_digit_prob) == 3
+    assert len(leading_digit_prob['digit']) == len(leading_digit_prob['prob']) == len(leading_digit_prob['count']) == 9
+    assert len(leading_digit_prob['prob']) == 9
+    assert leading_digit_prob['digit'][0] == 1
+    assert leading_digit_prob['prob'][0] == 0.25
+    assert leading_digit_prob['digit'][1] == 2
+    assert leading_digit_prob['prob'][1] == 0.2
+    assert leading_digit_prob['digit'][2] == 3
+    assert leading_digit_prob['prob'][2] == 0.15
+    assert leading_digit_prob['digit'][3] == 4
+    assert leading_digit_prob['prob'][3] == 0.05
+    assert leading_digit_prob['digit'][4] == 5
+    assert leading_digit_prob['prob'][4] == 0.1
+    assert leading_digit_prob['digit'][5] == 6
+    assert leading_digit_prob['prob'][5] == 0.1
+    assert leading_digit_prob['digit'][6] == 7
+    assert leading_digit_prob['prob'][6] == 0.0
+    assert leading_digit_prob['digit'][7] == 8
+    assert leading_digit_prob['prob'][7] == 0.1
+    assert leading_digit_prob['digit'][8] == 9
+    assert leading_digit_prob['prob'][8] == 0.05
+
+
+def test_calc_benfords_law():
+
+    """
+    def fibonacci(n):
+        fibs = [1, 1]
+        for i in range(2, n + 1):
+            fibs.append(fibs[i - 1] + fibs[i - 2])
+        return fibs
+
+    digit_probs = formula.Common.benford_digit_probs()
+    digits = np.arange(1, 10)
+    fig, axs = plt.subplots(1, 4, figsize=(20, 5))
+    for i, ax in enumerate(axs):
+        n = 10 ** (i + 1)
+        fib_nums = fibonacci(n)
+        leading_digit_prob = formula.Common.leading_digit_count(fib_nums)
+        sse0 = np.sum((leading_digit_prob['prob'] - digit_probs) ** 2)
+
+        ax.bar(leading_digit_prob['digit'], leading_digit_prob['prob'], width=0.25)
+        ax.bar(digits + 0.25, digit_probs, width=0.25)
+
+        ax.set_xticks(leading_digit_prob['digit'])
+        ax.set_xlabel('Digits')
+        ax.set_ylabel('Probability')
+        ax.set_title(f'n = {n}, SSE = {sse0:.2e}')
+
+        ax.legend(labels=['Fibonacci', "Benford's Law"])
+
+    plt.suptitle(f'Probability of Leading Digits', fontsize=16)
     plt.show()
     """

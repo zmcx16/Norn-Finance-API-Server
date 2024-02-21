@@ -21,6 +21,42 @@ class Common:
         irr = (1 + tr) ** (252 / len(quotes)) - 1
         return irr
 
+    # https://www.learndatasci.com/glossary/benfords-law/
+    @staticmethod
+    def benford_digit_probs():
+        def prob_digit(d):
+            d = int(d)
+            prob_d = np.log10(1 + 1 / d)
+            return prob_d
+
+        digits = np.arange(1, 10)
+        digit_probs = np.zeros(len(digits))
+        for digit in digits:
+            digit_probs[digit - 1] = prob_digit(digit)
+
+        return digit_probs
+
+    @staticmethod
+    def leading_digit_count(numbers):
+        digit_dict = {'digit': np.arange(1, 10),
+                      'prob': np.zeros(9),
+                      'count': np.zeros(9)}
+        for num in numbers:
+            first_digit = int(str(num)[:1])
+            ind = np.where(digit_dict['digit'] == first_digit)
+            digit_dict['count'][ind] = digit_dict['count'][ind] + 1
+
+        digit_dict['prob'] = digit_dict['count'] / len(numbers)
+
+        return digit_dict
+
+    @staticmethod
+    def calc_benfords_law(numbers):
+        digit_probs = Common.benford_digit_probs()
+        leading_digit_prob = Common.leading_digit_count(numbers)
+        sse0 = np.sum((leading_digit_prob['prob'] - digit_probs) ** 2)
+        return sse0
+
 
 class Volatility:
     @staticmethod
