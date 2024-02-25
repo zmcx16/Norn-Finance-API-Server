@@ -3,3 +3,4 @@ beautifulsoup4>=4.11.1
 webdriver-manager>=3.8.5
 selenium>=4.7.2
 numpy>=1.26.3
+yfinance>=0.2.36
