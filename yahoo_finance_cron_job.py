@@ -313,6 +313,7 @@ def get_esg_chart():
 
 
 def get_benford_law(benford_update_count):
+    nonlocal benford_update_count
     logging.info(f'get {symbol} benford law data')
     if symbol in stock_benford_law_file["data"] and "update_time" in stock_benford_law_file["data"][symbol] and \
             now - UPDATE_INTERVAL < \
