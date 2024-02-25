@@ -312,7 +312,7 @@ def get_esg_chart():
     return True
 
 
-def get_benford_law():
+def get_benford_law(benford_update_count):
     logging.info(f'get {symbol} benford law data')
     if symbol in stock_benford_law_file["data"] and "update_time" in stock_benford_law_file["data"][symbol] and \
             now - UPDATE_INTERVAL < \
@@ -323,6 +323,7 @@ def get_benford_law():
     benford_data = calc_stock_benford_probs(symbol)
     output = {'update_time': str(datetime.now()), 'data': benford_data}
     stock_benford_law_file["data"][symbol] = output
+    benford_update_count += 1
     with open(stock_benford_law_file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(stock_benford_law_file, separators=(',', ':')))
     return True
@@ -358,16 +359,17 @@ if __name__ == "__main__":
     output_esg = {"data": {}}
     output_recommendation = {"data": {}}
     output_eps = {"data": {}}
+    benford_update_count = 0
     for s_i in range(len(symbol_list)):
         now = datetime.now().timestamp()
         logging.info(
-            f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})] | Benford:({len(stock_benford_law_file["data"])})]')
+            f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])}) | Benford:({benford_update_count})]')
         symbol = symbol_list[s_i]
         if not get_quote_summary_store():
             break
         if not get_esg_chart():
             break
-        if not get_benford_law():
+        if not get_benford_law(benford_update_count):
             break
         elif (s_i + 1) % BATCH_GITHUB_UPDATE == 0:
             update_github()
