@@ -12,6 +12,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 
+from models.stock import calc_stock_benford_probs
+
 
 afscreener_url = os.environ.get("AF_URL", "")
 afscreener_token = os.environ.get("AF_TOKEN", "")
@@ -23,6 +25,7 @@ RETRY_FAILED_DELAY = 80
 UPDATE_INTERVAL = 60 * 60 * 24 * 7  # 1 week
 BATCH_DB_UPDATE = 10
 BATCH_GITHUB_UPDATE = 100
+
 
 def send_request(url, retry):
     for r in range(retry):
@@ -135,8 +138,9 @@ def update_db(output, api):
     output["data"] = {}
 
 
-def update_esg_chart_github():
-    command = ('cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart' + ' && ' 
+def update_github():
+    command = ('cp -r -f ./master/data-output/esgChart/* ./data-output/esgChart' + ' && '
+    + 'cp -f ./master/data-output/stock-benford-law.json ./data-output' + ' && '
     + 'git config --global user.name "zmcx16-bot"' + ' && '
     + 'git config --global user.email "zmcx16-bot@zmcx16.moe"' + ' && '
     + 'git reset --soft HEAD~1' + ' && '
@@ -187,7 +191,7 @@ def get_quote_summary_store():
                             current_recommendation_data[symbol]["last_update_time"]
     eps_latest = symbol in current_eps_data and now - UPDATE_INTERVAL < current_eps_data[symbol]["last_update_time"]
     if esg_latest and recommendation_latest and eps_latest:
-        logging.info(f'no need update {symbol}')
+        logging.info(f'no need update {symbol} for esg')
         return True
 
     data = get_stock_data_by_browser(symbol, RETRY_SEND_REQUEST)
@@ -289,7 +293,7 @@ def get_esg_chart():
             current_data = json.loads(f.read())
         if "update_time" in current_data and \
                 now - UPDATE_INTERVAL < datetime.strptime(current_data["update_time"], "%Y-%m-%d %H:%M:%S.%f").timestamp():
-            logging.info(f'no need update {symbol}')
+            logging.info(f'no need update {symbol} for get_esg_chart')
             return True
 
     ret, resp = send_request("https://query2.finance.yahoo.com/v1/finance/esgChart?symbol=" + symbol, RETRY_SEND_REQUEST)
@@ -312,6 +316,23 @@ def get_esg_chart():
     return True
 
 
+def get_benford_law():
+    now = datetime.now().timestamp()
+    logging.info(f'get {symbol} benford law data')
+    if symbol in stock_benford_law_file["data"] and "update_time" in stock_benford_law_file["data"][symbol] and \
+            now - UPDATE_INTERVAL < \
+            datetime.strptime(stock_benford_law_file["data"][symbol]["update_time"], "%Y-%m-%d %H:%M:%S.%f").timestamp():
+        logging.info(f'no need update {symbol} for benford law')
+        return True
+
+    benford_data = calc_stock_benford_probs(symbol)
+    output = {'update_time': str(datetime.now()), 'data': benford_data}
+    stock_benford_law_file["data"][symbol] = output
+    with open(stock_benford_law_file_path, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(stock_benford_law_file, separators=(',', ':')))
+    return True
+
+
 if __name__ == "__main__":
 
     options = webdriver.FirefoxOptions()
@@ -324,6 +345,11 @@ if __name__ == "__main__":
     esg_chart_folder = root / "data-output" / "esgChart"
     if not os.path.exists(esg_chart_folder):
         os.makedirs(esg_chart_folder)
+
+    stock_benford_law_file_path = root / "data-output" / "stock-benford-law.json"
+    stock_benford_law_file = {"data": {}, 'update_time': str(datetime.now())}
+    if os.path.exists(stock_benford_law_file_path) and os.path.getsize(stock_benford_law_file_path) > 0:
+        stock_benford_law_file = json.loads(open(stock_benford_law_file_path, 'r', encoding='utf-8').read())
 
     # get stock list
     symbol_list = get_af_common_data('query-stock-list', RETRY_SEND_REQUEST)
@@ -339,19 +365,19 @@ if __name__ == "__main__":
     output_eps = {"data": {}}
     for s_i in range(len(symbol_list)):
         symbol = symbol_list[s_i]
-
         if not get_quote_summary_store():
             break
-
         if not get_esg_chart():
             break
+        if not get_benford_law():
+            break
         elif (s_i + 1) % BATCH_GITHUB_UPDATE == 0:
-            update_esg_chart_github()
+            update_github()
 
     # final update
     update_db(output_esg, 'update-esg-data')
     update_db(output_recommendation, 'update-recommendation-data')
     update_db(output_eps, 'update-eps-data')
-    update_esg_chart_github()
+    update_github()
 
     logging.info('all task done')

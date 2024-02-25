@@ -5,6 +5,8 @@ import json
 import csv
 from enum import Enum
 from datetime import date, datetime, timedelta
+
+import numpy as np
 import yfinance as yf
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -363,4 +365,68 @@ def get_dividend_history_by_yahoo(symbol):
         output["data"].append(row_output)
 
     logging.info('get_dividend_history_by_yahoo end')
+    return output
+
+
+def calc_reports_benford_probs(reports, skip_keys, only_calc_latest_report=False):
+    numbers = []
+    for r in reports:
+        i = 0
+        for date in r.columns:
+            key_i = 0
+            values = r[date].values
+            for key in r[date].keys():
+                key_i += 1
+                if key in skip_keys:
+                    continue
+                if np.isnan(values[key_i-1]):
+                    continue
+
+                numbers.append(values[key_i-1])
+            if only_calc_latest_report:
+                break
+            i += 1
+
+    leading_digit_prob = formula.Common.leading_digit_count(numbers)
+    leading_digit_prob["benfordSSE"] = np.sum((leading_digit_prob['prob'] - formula.Common.benford_digit_probs()) ** 2)
+    leading_digit_prob["prob"] = leading_digit_prob["prob"].tolist()
+    leading_digit_prob["count"] = leading_digit_prob["count"].tolist()
+    return leading_digit_prob
+
+
+def calc_stock_benford_probs(stock):
+    output = {
+        "benfordDigitProbs": formula.Common.benford_digit_probs().tolist(),
+        "stockDigitProbsSSE": {
+            "lastQuarter": {},
+            "lastYear": {},
+            "allQuarters": {},
+            "allYears": {},
+            "allQuartersYears": {}
+        }
+    }
+
+    ticker = get_stock(stock)
+    income_stmt = ticker.income_stmt
+    quarter_income_stmt = ticker.quarterly_income_stmt
+    balance_sheet = ticker.balance_sheet
+    quarter_balance_sheet = ticker.quarterly_balance_sheet
+    cashflow = ticker.cashflow
+    quarter_cashflow = ticker.quarterly_cashflow
+    skip_keys = ["Diluted EPS", "Basic EPS", "Tax Rate For Calcs"]
+    output["stockDigitProbsSSE"]["lastQuarter"] = calc_reports_benford_probs(
+        [quarter_income_stmt, quarter_balance_sheet, quarter_cashflow],
+        skip_keys, True)
+    output["stockDigitProbsSSE"]["lastYear"] = calc_reports_benford_probs(
+        [income_stmt, balance_sheet, cashflow],
+        skip_keys, True)
+    output["stockDigitProbsSSE"]["allQuarters"] = calc_reports_benford_probs(
+        [quarter_income_stmt, quarter_balance_sheet, quarter_cashflow],
+        skip_keys, False)
+    output["stockDigitProbsSSE"]["allYears"] = calc_reports_benford_probs(
+        [income_stmt, balance_sheet, cashflow],
+        skip_keys, False)
+    output["stockDigitProbsSSE"]["allQuartersYears"] = calc_reports_benford_probs(
+        [quarter_income_stmt, quarter_balance_sheet, quarter_cashflow, income_stmt, balance_sheet, cashflow],
+        skip_keys, False)
     return output

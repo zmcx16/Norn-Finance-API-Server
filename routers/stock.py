@@ -26,6 +26,25 @@ class StockPriceSimulationByMCResponse(BaseModel):
     mean: List[float]
 
 
+class DigitProbsSSE(BaseModel):
+    prob: List[float]
+    count: List[int]
+    benfordSSE: float
+
+
+class StockDigitProbsSSE(BaseModel):
+    lastQuarter: DigitProbsSSE
+    lastYear: DigitProbsSSE
+    allQuarters: DigitProbsSSE
+    allYears: DigitProbsSSE
+    allQuartersYears: DigitProbsSSE
+
+
+class StockBenfordLawResponse(BaseModel):
+    benfordDigitProbs: List[float]
+    stockDigitProbsSSE: StockDigitProbsSSE
+
+
 router = APIRouter(
     prefix="/stock",
     tags=["stock"]
@@ -70,3 +89,13 @@ async def price_simulation_by_mc(request: Request, response: Response, symbol: s
                                          mu_vol_type, mu, vol, proxy=proxy, stock_src=stock_src)
 
     return {'data': o.tolist(), 'mean': o.mean(axis=0).tolist()}
+
+
+@router.get("/benford-law", tags=["stock"], response_model=StockBenfordLawResponse)
+@limiter.app_limiter.limit("100/minute")
+async def stock_benford_law(request: Request, response: Response, symbol: str):
+    if not symbol:
+        raise HTTPException(status_code=400, detail="Invalid request parameter")
+
+    output = stock.calc_stock_benford_probs(symbol)
+    return output

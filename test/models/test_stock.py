@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from models import stock
 
@@ -23,6 +24,15 @@ def test_get_stock():
     # print("***********************")
     print("******** news *********")
     print(output.news)
+    print("***********************")
+    print("******** income_stmt *********")
+    print(output.income_stmt)
+    print("***********************")
+    print("******** balance_sheet *********")
+    print(output.balance_sheet)
+    print("***********************")
+    print("******** cashflow *********")
+    print(output.cashflow)
     print("***********************")
 
 
@@ -90,3 +100,24 @@ def test_get_dividend_history_by_yahoo():
     assert output is not None
     assert len(output["data"]) > 0
     print(output)
+
+
+def test_calc_reports_benford_probs():
+    ticker = stock.get_stock("T")
+    income_stmt = ticker.income_stmt
+    balance_sheet = ticker.balance_sheet
+    cashflow = ticker.cashflow
+    print(income_stmt.to_string())
+    print(balance_sheet.to_string())
+    print(cashflow.to_string())
+    skip_keys = ["Diluted EPS", "Basic EPS", "Tax Rate For Calcs"]
+    reports_benford_probs = stock.calc_reports_benford_probs([income_stmt, balance_sheet, cashflow], skip_keys, True)
+    print(reports_benford_probs)
+    assert len(reports_benford_probs['prob']) == 9
+    assert len(reports_benford_probs['count']) == 9
+    assert reports_benford_probs['benfordSSE'] > 0
+
+
+def test_calc_stock_benford_probs():
+    stock_benford_probs = stock.calc_stock_benford_probs("T")
+    print(stock_benford_probs)

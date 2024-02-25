@@ -38,12 +38,12 @@ class Common:
 
     @staticmethod
     def leading_digit_count(numbers):
-        digit_dict = {'digit': np.arange(1, 10),
-                      'prob': np.zeros(9),
+        digit = np.arange(1, 10)
+        digit_dict = {'prob': np.zeros(9),
                       'count': np.zeros(9)}
         for num in numbers:
-            first_digit = int(str(num)[:1])
-            ind = np.where(digit_dict['digit'] == first_digit)
+            first_digit = int(str(abs(num))[:1])
+            ind = np.where(digit == first_digit)
             digit_dict['count'][ind] = digit_dict['count'][ind] + 1
 
         digit_dict['prob'] = digit_dict['count'] / len(numbers)
