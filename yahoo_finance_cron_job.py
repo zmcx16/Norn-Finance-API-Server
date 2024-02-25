@@ -322,7 +322,6 @@ def get_benford_law(benford_update_count):
 
     benford_data = calc_stock_benford_probs(symbol)
     if benford_data is None:
-        logging.error(f'get {symbol} benford law data failed')
         return False, benford_update_count
 
     output = {'update_time': str(datetime.now()), 'data': benford_data}
@@ -375,7 +374,8 @@ if __name__ == "__main__":
             break
         benford_updated, benford_update_count = get_benford_law(benford_update_count)
         if not benford_updated:
-            break
+            logging.error(f'get {symbol} benford law data failed, skip it')
+            continue
         elif (s_i + 1) % BATCH_GITHUB_UPDATE == 0:
             update_github()
 
