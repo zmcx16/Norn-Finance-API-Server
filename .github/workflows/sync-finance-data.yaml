@@ -33,7 +33,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install -r ./master/requirements-yahoo_finance_cron_job.txt
-    - name: Copy esgChart source
+    - name: Copy data source
       run: |-
         mkdir -p ./master/data-output
         [ -d "./data-output/esgChart" ] && cp -r ./data-output/esgChart ./master/data-output
