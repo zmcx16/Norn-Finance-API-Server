@@ -413,6 +413,9 @@ def calc_stock_benford_probs(stock):
     quarter_balance_sheet = ticker.quarterly_balance_sheet
     cashflow = ticker.cashflow
     quarter_cashflow = ticker.quarterly_cashflow
+    if income_stmt.empty and quarter_income_stmt.empty and balance_sheet.empty and quarter_balance_sheet.empty and cashflow.empty and quarter_cashflow.empty:
+        return None
+
     skip_keys = ["Diluted EPS", "Basic EPS", "Tax Rate For Calcs"]
     output["stockDigitProbsSSE"]["lastQuarter"] = calc_reports_benford_probs(
         [quarter_income_stmt, quarter_balance_sheet, quarter_cashflow],

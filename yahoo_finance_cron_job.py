@@ -313,21 +313,24 @@ def get_esg_chart():
 
 
 def get_benford_law(benford_update_count):
-    nonlocal benford_update_count
     logging.info(f'get {symbol} benford law data')
     if symbol in stock_benford_law_file["data"] and "update_time" in stock_benford_law_file["data"][symbol] and \
             now - UPDATE_INTERVAL < \
             datetime.strptime(stock_benford_law_file["data"][symbol]["update_time"], "%Y-%m-%d %H:%M:%S.%f").timestamp():
         logging.info(f'no need update {symbol} for benford law')
-        return True
+        return True, benford_update_count
 
     benford_data = calc_stock_benford_probs(symbol)
+    if benford_data is None:
+        logging.error(f'get {symbol} benford law data failed')
+        return False, benford_update_count
+
     output = {'update_time': str(datetime.now()), 'data': benford_data}
     stock_benford_law_file["data"][symbol] = output
     benford_update_count += 1
     with open(stock_benford_law_file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(stock_benford_law_file, separators=(',', ':')))
-    return True
+    return True, benford_update_count
 
 
 if __name__ == "__main__":
@@ -370,7 +373,8 @@ if __name__ == "__main__":
             break
         if not get_esg_chart():
             break
-        if not get_benford_law(benford_update_count):
+        benford_updated, benford_update_count = get_benford_law(benford_update_count)
+        if not benford_updated:
             break
         elif (s_i + 1) % BATCH_GITHUB_UPDATE == 0:
             update_github()

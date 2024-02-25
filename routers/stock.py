@@ -98,4 +98,7 @@ async def stock_benford_law(request: Request, response: Response, symbol: str):
         raise HTTPException(status_code=400, detail="Invalid request parameter")
 
     output = stock.calc_stock_benford_probs(symbol)
+    if output is None:
+        raise HTTPException(status_code=400, detail="calc_stock_benford_probs failed or data not found.")
+
     return output
