@@ -182,10 +182,6 @@ def get_af_common_data(api, retry):
 
 
 def get_quote_summary_store():
-    now = datetime.now().timestamp()
-    logging.info(
-        f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})]')
-
     esg_latest = symbol in current_esg_data and now - UPDATE_INTERVAL < current_esg_data[symbol]["last_update_time"]
     recommendation_latest = symbol in current_recommendation_data and now - UPDATE_INTERVAL < \
                             current_recommendation_data[symbol]["last_update_time"]
@@ -317,7 +313,6 @@ def get_esg_chart():
 
 
 def get_benford_law():
-    now = datetime.now().timestamp()
     logging.info(f'get {symbol} benford law data')
     if symbol in stock_benford_law_file["data"] and "update_time" in stock_benford_law_file["data"][symbol] and \
             now - UPDATE_INTERVAL < \
@@ -364,6 +359,9 @@ if __name__ == "__main__":
     output_recommendation = {"data": {}}
     output_eps = {"data": {}}
     for s_i in range(len(symbol_list)):
+        now = datetime.now().timestamp()
+        logging.info(
+            f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])})] | Benford:({len(stock_benford_law_file["data"])})]')
         symbol = symbol_list[s_i]
         if not get_quote_summary_store():
             break
