@@ -362,9 +362,9 @@ if __name__ == "__main__":
     benford_update_count = 0
     for s_i in range(len(symbol_list)):
         now = datetime.now().timestamp()
+        symbol = symbol_list[s_i]
         logging.info(
             f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])}) | Benford:({benford_update_count})]')
-        symbol = symbol_list[s_i]
         if not get_quote_summary_store():
             break
         if not get_esg_chart():
