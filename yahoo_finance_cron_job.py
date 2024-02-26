@@ -12,7 +12,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 
-from models.stock import calc_stock_benford_probs
+from models import formula
+from models import stock
 
 
 afscreener_url = os.environ.get("AF_URL", "")
@@ -320,9 +321,13 @@ def get_benford_law(benford_update_count):
         logging.info(f'no need update {symbol} for benford law')
         return True, benford_update_count
 
-    benford_data = calc_stock_benford_probs(symbol)
+    benford_data = stock.calc_stock_benford_probs(symbol)
     if benford_data is None:
         return False, benford_update_count
+
+    # remove key benfordDigitProbs
+    if "benfordDigitProbs" in benford_data:
+        del benford_data["benfordDigitProbs"]
 
     output = {'update_time': str(datetime.now()), 'data': benford_data}
     stock_benford_law_file["data"][symbol] = output
@@ -346,7 +351,7 @@ if __name__ == "__main__":
         os.makedirs(esg_chart_folder)
 
     stock_benford_law_file_path = root / "data-output" / "stock-benford-law.json"
-    stock_benford_law_file = {"data": {}, 'update_time': str(datetime.now())}
+    stock_benford_law_file = {"data": {}, "benfordDigitProbs": formula.Common.benford_digit_probs().tolist(), 'update_time': str(datetime.now())}
     if os.path.exists(stock_benford_law_file_path) and os.path.getsize(stock_benford_law_file_path) > 0:
         stock_benford_law_file = json.loads(open(stock_benford_law_file_path, 'r', encoding='utf-8').read())
 
