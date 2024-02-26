@@ -351,9 +351,15 @@ if __name__ == "__main__":
         os.makedirs(esg_chart_folder)
 
     stock_benford_law_file_path = root / "data-output" / "stock-benford-law.json"
-    stock_benford_law_file = {"data": {}, "benfordDigitProbs": formula.Common.benford_digit_probs().tolist(), 'update_time': str(datetime.now())}
+    stock_benford_law_file = {}
     if os.path.exists(stock_benford_law_file_path) and os.path.getsize(stock_benford_law_file_path) > 0:
         stock_benford_law_file = json.loads(open(stock_benford_law_file_path, 'r', encoding='utf-8').read())
+        if "data" not in stock_benford_law_file:
+            stock_benford_law_file["data"] = {}
+        if "benfordDigitProbs" not in stock_benford_law_file:
+            stock_benford_law_file["benfordDigitProbs"] = formula.Common.benford_digit_probs().tolist()
+        if "update_time" not in stock_benford_law_file:
+            stock_benford_law_file["update_time"] = str(datetime.now())
 
     # get stock list
     symbol_list = get_af_common_data('query-stock-list', RETRY_SEND_REQUEST)
