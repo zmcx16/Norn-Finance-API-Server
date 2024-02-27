@@ -1,5 +1,5 @@
 import sys
-from typing import List, Optional
+from typing import List, Optional, Dict, Union
 from fastapi import APIRouter, HTTPException, Request, Response, Query
 from pydantic import BaseModel
 
@@ -33,11 +33,11 @@ class DigitProbsSSE(BaseModel):
 
 
 class StockDigitProbsSSE(BaseModel):
-    lastQuarter: DigitProbsSSE
-    lastYear: DigitProbsSSE
-    allQuarters: DigitProbsSSE
-    allYears: DigitProbsSSE
-    allQuartersYears: DigitProbsSSE
+    lastQuarter: Union[DigitProbsSSE, Dict[None, None]]
+    lastYear: Union[DigitProbsSSE, Dict[None, None]]
+    allQuarters: Union[DigitProbsSSE, Dict[None, None]]
+    allYears: Union[DigitProbsSSE, Dict[None, None]]
+    allQuartersYears: Union[DigitProbsSSE, Dict[None, None]]
 
 
 class StockBenfordLawResponse(BaseModel):

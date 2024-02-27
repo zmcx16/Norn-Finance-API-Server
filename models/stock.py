@@ -387,6 +387,9 @@ def calc_reports_benford_probs(reports, skip_keys, only_calc_latest_report=False
                 break
             i += 1
 
+    if len(numbers) == 0:
+        return {}
+
     leading_digit_prob = formula.Common.leading_digit_count(numbers)
     leading_digit_prob["benfordSSE"] = np.sum((leading_digit_prob['prob'] - formula.Common.benford_digit_probs()) ** 2)
     leading_digit_prob["prob"] = leading_digit_prob["prob"].tolist()
