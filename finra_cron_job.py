@@ -205,7 +205,7 @@ def get_short_data(symbol):
         if resp["status"] == "success" and resp["returnBody"]["statusCode"] == 200:
             return json.loads(resp["returnBody"]["data"])
         else:
-            logging.error('server err = {err}, msg = {msg}'.format(err=resp["ret"], msg=resp["err_msg"]))
+            logging.error('server err = {err}, msg = {msg}'.format(err=ret, msg=resp["err_msg"]))
     else:
         logging.error('send_post_json failed: {ret}'.format(ret=ret))
 
