@@ -61,6 +61,8 @@ def send_post_json(url, req_data, headers={'content-type': 'application/json'}, 
 
         if res.status_code == 200:
             return 0, res.json()
+        else:
+            logging.error('send_post_json failed: {ret}, status code'.format(ret=res.text, status_code=res.status_code))
 
         time.sleep(RETRY_FAILED_DELAY)
 
@@ -205,7 +207,7 @@ def get_short_data(symbol):
         if resp["status"] == "success" and resp["returnBody"]["statusCode"] == 200:
             return json.loads(resp["returnBody"]["data"])
         else:
-            logging.error('server err = {err}, msg = {msg}'.format(err=ret, msg=resp["err_msg"]))
+            logging.error('server err = {err}'.format(err=ret))
     else:
         logging.error('send_post_json failed: {ret}'.format(ret=ret))
 
