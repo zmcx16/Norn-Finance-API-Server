@@ -6,9 +6,11 @@ on:
     - cron:  '10 4 * * *'
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
     if: github.ref == 'refs/heads/master'
     steps:
+    - uses: browser-actions/setup-firefox@v1
+    - run: firefox --version
     - name: Check out repo
       uses: actions/checkout@v2
       with:
