@@ -9,6 +9,8 @@ jobs:
     runs-on: macos-latest
     if: github.ref == 'refs/heads/master'
     steps:
+    - uses: browser-actions/setup-firefox@v1
+    - run: firefox --version
     - name: Check out repo
       uses: actions/checkout@v2
       with:
