@@ -6,7 +6,7 @@ on:
     - cron:  '0 12 * * *'
 jobs:
   build:
-    runs-on: macos-14-large
+    runs-on: macos-13
     if: github.ref == 'refs/heads/master'
     steps:
     - uses: browser-actions/setup-firefox@v1
