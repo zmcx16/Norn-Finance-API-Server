@@ -96,7 +96,11 @@ def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
             extra_info["earningsDate"] = ""
             try:
                 if ticker.calendar is not None:
-                    extra_info["earningsDate"] = ' - '.join(ticker.calendar.iloc[0].astype(str).array)
+                    # extra_info["earningsDate"] = ' - '.join(ticker.calendar.iloc[0].astype(str).array)
+                    earnings_date = ticker.calendar["Earnings Date"]
+                    if earnings_date is not None:
+                        # datetime.date array to string array
+                        extra_info["earningsDate"] = ' - '.join([d.strftime('%Y-%m-%d') for d in earnings_date])
             except Exception:
                 logging.warning("get ticker.calendar failed")
                 logging.error(traceback.format_exc())
