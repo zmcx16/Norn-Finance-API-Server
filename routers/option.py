@@ -44,6 +44,7 @@ class OptionsChainBaseData(BaseModel):
 
 class StockExtraInfo(BaseModel):
     earningsDate: str
+    exDividendDate: str
 
 
 class OptionsChainQuotesData(BaseModel):
