@@ -379,8 +379,8 @@ if __name__ == "__main__":
         symbol = symbol_list[s_i]
         logging.info(
             f'[{s_i + 1} / {len(symbol_list)}] get {symbol} data [ESG:({len(output_esg["data"])}) | Recomm:({len(output_recommendation["data"])}) | EPS:({len(output_eps["data"])}) | Benford:({benford_update_count})]')
-        if not get_quote_summary_store():
-            break
+        # if not get_quote_summary_store():
+        #     break
         if not get_esg_chart():
             break
         benford_updated, benford_update_count = get_benford_law(benford_update_count)
@@ -391,9 +391,9 @@ if __name__ == "__main__":
             update_github()
 
     # final update
-    update_db(output_esg, 'update-esg-data')
-    update_db(output_recommendation, 'update-recommendation-data')
-    update_db(output_eps, 'update-eps-data')
+    # update_db(output_esg, 'update-esg-data')
+    # update_db(output_recommendation, 'update-recommendation-data')
+    # update_db(output_eps, 'update-eps-data')
     update_github()
 
     logging.info('all task done')
