@@ -5,3 +5,4 @@ beautifulsoup4>=4.11.1
 numpy>=1.26.3
 yfinance>=0.2.36
 scipy>=1.7.3
+lxml>=4.9.3
