@@ -34,12 +34,11 @@ def send_request(url, retry):
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"}
             res = requests.get(url, headers=headers)
             res.raise_for_status()
+            if res.status_code == 200:
+                return 0, res.text
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
-        
-        if res.status_code == 200:
-            return 0, res.text
         
         time.sleep(RETRY_FAILED_DELAY)
 
@@ -59,12 +58,11 @@ def send_yahoo_request(url, retry):
             }
             res = requests.get(url, headers=headers)
             res.raise_for_status()
+            if res.status_code == 200:
+                return 0, res.text
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
-
-        if res.status_code == 200:
-            return 0, res.text
 
         time.sleep(RETRY_FAILED_DELAY)
 
@@ -77,13 +75,11 @@ def send_post_json(url, retry, req_data):
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"}
             res = requests.post(url, req_data, headers=headers)
             res.raise_for_status()
+            if res.status_code == 200:
+                return 0, res.text
         except Exception as ex:
             logging.error(traceback.format_exc())
             logging.info(f'retry = {r}')
-
-        if res.status_code == 200:
-            return 0, res.text
-
         time.sleep(RETRY_FAILED_DELAY)
 
     return -2, "exceed retry cnt"
