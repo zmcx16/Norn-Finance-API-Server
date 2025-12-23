@@ -97,18 +97,24 @@ def get_stock_history(symbol, period, proxy=None, stock_src="yahoo"):
             extra_info["exDividendDate"] = ""
             try:
                 if ticker.calendar is not None:
-                    earnings_date = ticker.calendar["Earnings Date"]
-                    if earnings_date is not None:
-                        # datetime.date array to string array
-                        extra_info["earningsDate"] = ' - '.join([d.strftime('%Y-%m-%d') for d in earnings_date])
-                    ex_dividend_date = ticker.calendar["Ex-Dividend Date"]
-                    if ex_dividend_date is not None:
-                        extra_info["exDividendDate"] = ex_dividend_date.strftime('%Y-%m-%d')
+                    # yfinance calendar structure has changed, need to handle different formats
+                    if isinstance(ticker.calendar, dict):
+                        earnings_date = ticker.calendar.get("Earnings Date")
+                        if earnings_date is not None:
+                            # datetime.date array to string array
+                            if hasattr(earnings_date, '__iter__') and not isinstance(earnings_date, str):
+                                extra_info["earningsDate"] = ' - '.join([d.strftime('%Y-%m-%d') for d in earnings_date])
+                            else:
+                                extra_info["earningsDate"] = earnings_date.strftime('%Y-%m-%d') if hasattr(earnings_date, 'strftime') else str(earnings_date)
+                        ex_dividend_date = ticker.calendar.get("Ex-Dividend Date")
+                        if ex_dividend_date is not None:
+                            extra_info["exDividendDate"] = ex_dividend_date.strftime('%Y-%m-%d') if hasattr(ex_dividend_date, 'strftime') else str(ex_dividend_date)
             except Exception:
                 logging.warning("get ticker.calendar failed")
                 logging.error(traceback.format_exc())
 
-            return ticker.history(period=period, proxy=proxy), extra_info
+            # yfinance no longer supports proxy parameter in history method
+            return ticker.history(period=period), extra_info
     except Exception:
         logging.error(traceback.format_exc())
 

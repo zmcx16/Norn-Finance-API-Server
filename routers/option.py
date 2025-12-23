@@ -114,7 +114,7 @@ async def options_chain_quotes(request: Request, response: Response, symbol: str
         return {"symbol": symbol, "contracts": []}
 
     stock_data, extra_info = stock.get_stock_history(symbol, "1d")
-    return {"symbol": symbol, "stockPrice": stock_data["Close"][len(stock_data["Close"])-1],
+    return {"symbol": symbol, "stockPrice": stock_data["Close"].iloc[-1],
             "stockExtraInfo": extra_info, "contracts": contracts}
 
 
@@ -187,7 +187,7 @@ async def ws_options_chain_quotes_valuation(websocket: WebSocket, symbol: str,
     while True:
         if not t.is_alive():
             # don't pass t.output directly, may occur "Object of type longdouble is not JSON serializable"
-            await websocket.send_json(OptionsChainQuotesValuationResponse(**t.output).dict())
+            await websocket.send_json(OptionsChainQuotesValuationResponse(**t.output).model_dump())
             break
         if with_heartbeat:
             _ = await websocket.receive_text()
