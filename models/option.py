@@ -172,7 +172,7 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, calc_kelly_t
     max_days = max(expiry_days_dict.values())
 
     if calc_kelly_type is not CalcKellyType.KellyCriterion_IV:
-        output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data)-1], mu, ewma_his_vol,
+        output = formula.Stock.price_simulation_by_mc(stock_close_data.iloc[-1], mu, ewma_his_vol,
                                                       max_days+1, iteration=iteration)
     for contract in contracts:
         expiry_date = contract['expiryDate']
@@ -185,7 +185,7 @@ def calc_kelly_criterion(stock_close_data, ewma_his_vol, contracts, calc_kelly_t
             expiry_predict_prices = expiry_predict_prices_temp
             if calc_kelly_type is CalcKellyType.KellyCriterion_IV:
                 iv = call_put['impliedVolatility']
-                output = formula.Stock.price_simulation_by_mc(stock_close_data[len(stock_close_data) - 1], 0,
+                output = formula.Stock.price_simulation_by_mc(stock_close_data.iloc[-1], 0,
                                                               iv, days + 1, iteration=50000)
                 expiry_predict_prices = output[:, days]
 
