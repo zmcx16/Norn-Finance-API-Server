@@ -255,7 +255,7 @@ def options_chain_quotes_valuation(symbol, min_next_days, max_next_days, min_vol
     stock_data, extra_info = stock.get_stock_history(symbol, "1y", proxy, stock_src)
     ewma_his_vol = formula.Volatility.ewma_historical_volatility(data=stock_data["Close"], period=ewma_his_vol_period,
                                                                  p_lambda=ewma_his_vol_lambda)
-    stock_price = stock_data["Close"][len(stock_data["Close"])-1]
+    stock_price = stock_data["Close"].iloc[-1]
 
     if only_otm:
         filter_out_otm(contracts, stock_price)
@@ -315,4 +315,3 @@ def get_option_pcr(symbol: str, range_days: int):
         output["PCR_Volume"] = output["puts"]["totalVolume"] / output["calls"]["totalVolume"]
 
     return output
-
