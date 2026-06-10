@@ -71,8 +71,8 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
                                                                                             expiry_date=expiry_date))
 
                 expiry_calls_puts = {"expiryDate": expiry_date, "calls": [], "puts": []}
-                calls_puts = [None] * 2
-                for calls_puts_index in range(len(option_chain)-1):  # 0: calls, 1: puts, 2: not used
+                calls_puts = [[], []]
+                for calls_puts_index in range(min(2, len(option_chain))):  # 0: calls, 1: puts
                     d = option_chain[calls_puts_index]
                     d.drop(d[d.volume < min_volume].index, inplace=True)
                     d.drop(d[d.lastPrice < min_price].index, inplace=True)
@@ -101,7 +101,7 @@ def get_option_chain(symbol: str, min_next_days: int, max_next_days: int, min_vo
 
     except Exception:
         logging.error(traceback.format_exc())
-        return None
+        return []
 
     # logging.info(contracts)
     return contracts

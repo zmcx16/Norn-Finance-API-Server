@@ -23,7 +23,7 @@ def test_options_chain_quotes_valuation():
     output = response.json()
     print(output)
     assert len(output["contracts"]) > 0
-    assert len(output["contracts"][0]['calls']) > 0 or len(output["contracts"][0]['puts'])
+    assert len(output["contracts"][0]['calls']) > 0 or len(output["contracts"][0]['puts']) > 0
 
 
 def test_ws_options_chain_quotes_valuation():
